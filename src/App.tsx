@@ -27,7 +27,7 @@ import { useSketchableImageGeneration } from './hooks/useSketchableImageGenerati
 import type { RefinementMode } from './hooks/useSketchableImageGeneration';
 import { STYLE_PRESETS, DEFAULT_STYLE_PRESET } from './services/stylePresets';
 import type { StylePresetKey } from './services/stylePresets';
-import { detectRectangleX, lastRectXRejection } from './geometry/rectangleXDetection';
+import { detectRectangleX, lastRectXRejection, type RectangleXResult } from './geometry/rectangleXDetection';
 import { createPaletteIntent } from './palette';
 import type { PaletteIntent, PaletteAction } from './palette';
 import { Toaster } from './toast/Toast';
@@ -415,7 +415,12 @@ function App() {
     let rectXRejection = 'not enough strokes';
     if (pendingStrokesRef.current.length >= 3) {
       debugLog.info('Attempting rectangle+X detection', { pendingCount: pendingStrokesRef.current.length });
-      const rectXResult = detectRectangleX(pendingStrokesRef.current);
+      let rectXResult: RectangleXResult | null = null;
+      for (let windowSize = 3; windowSize <= Math.min(6, pendingStrokesRef.current.length); windowSize++) {
+        const window = pendingStrokesRef.current.slice(-windowSize);
+        rectXResult = detectRectangleX(window);
+        if (rectXResult) break;
+      }
       rectXRejection = rectXResult ? '' : lastRectXRejection;
       if (rectXResult) {
         debugLog.info('Rectangle+X gesture detected', {
