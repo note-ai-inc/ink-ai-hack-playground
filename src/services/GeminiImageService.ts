@@ -90,8 +90,33 @@ const FAKE_INK_PATTERN = {
   ],
 };
 
+function renderPatternToDataUrl(pattern: typeof FAKE_INK_PATTERN): string {
+  const size = 128;
+  const gridSize = 10;
+  const cellSize = size / gridSize;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d')!;
+
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, size, size);
+
+  ctx.fillStyle = pattern.color;
+  for (let r = 0; r < gridSize; r++) {
+    for (let c = 0; c < gridSize; c++) {
+      if (pattern.grid[r * gridSize + c]) {
+        ctx.fillRect(c * cellSize, r * cellSize, cellSize, cellSize);
+      }
+    }
+  }
+
+  return canvas.toDataURL('image/png');
+}
+
 class FakeGeminiImageService implements GeminiImageServiceInterface {
-  async generateImage(prompt: string, signal: AbortSignal): Promise<{ imageDataUrl: string }> {
+  async generateImage(_prompt: string, signal: AbortSignal): Promise<{ imageDataUrl: string }> {
     // Simulate API delay
     await new Promise<void>((resolve, reject) => {
       if (signal.aborted) {
@@ -109,55 +134,13 @@ class FakeGeminiImageService implements GeminiImageServiceInterface {
       signal.addEventListener('abort', onAbort, { once: true });
     });
 
-    const size = 128;
-    const gridSize = 10;
-    const cellSize = size / gridSize;
-
-    const canvas = document.createElement('canvas');
-    canvas.width = size;
-    canvas.height = size;
-    const ctx = canvas.getContext('2d')!;
-
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, size, size);
-
-    ctx.fillStyle = FAKE_INK_PATTERN.color;
-    for (let r = 0; r < gridSize; r++) {
-      for (let c = 0; c < gridSize; c++) {
-        if (FAKE_INK_PATTERN.grid[r * gridSize + c]) {
-          ctx.fillRect(c * cellSize, r * cellSize, cellSize, cellSize);
-        }
-      }
-    }
-
-    return { imageDataUrl: canvas.toDataURL('image/png') };
+    return { imageDataUrl: renderPatternToDataUrl(FAKE_INK_PATTERN) };
   }
 }
 
 /** Generate the default INK fallback image synchronously (no API call). */
 export function generateFallbackImage(): { imageDataUrl: string } {
-  const size = 128;
-  const gridSize = 10;
-  const cellSize = size / gridSize;
-
-  const canvas = document.createElement('canvas');
-  canvas.width = size;
-  canvas.height = size;
-  const ctx = canvas.getContext('2d')!;
-
-  ctx.fillStyle = '#ffffff';
-  ctx.fillRect(0, 0, size, size);
-
-  ctx.fillStyle = FAKE_INK_PATTERN.color;
-  for (let r = 0; r < gridSize; r++) {
-    for (let c = 0; c < gridSize; c++) {
-      if (FAKE_INK_PATTERN.grid[r * gridSize + c]) {
-        ctx.fillRect(c * cellSize, r * cellSize, cellSize, cellSize);
-      }
-    }
-  }
-
-  return { imageDataUrl: canvas.toDataURL('image/png') };
+  return { imageDataUrl: renderPatternToDataUrl(FAKE_INK_PATTERN) };
 }
 
 let instance: GeminiImageServiceInterface | null = null;

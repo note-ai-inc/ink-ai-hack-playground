@@ -2,39 +2,28 @@
 
 import type { NonogramGameState, NonogramCellState } from './types';
 
+function generateClueSequence(cells: boolean[]): number[] {
+  const clue: number[] = [];
+  let count = 0;
+  for (const filled of cells) {
+    if (filled) {
+      count++;
+    } else if (count > 0) {
+      clue.push(count);
+      count = 0;
+    }
+  }
+  if (count > 0) clue.push(count);
+  return clue.length > 0 ? clue : [0];
+}
+
 export function generateClues(solution: boolean[], rows: number, cols: number): { rowClues: number[][]; colClues: number[][] } {
-  const rowClues: number[][] = [];
-  for (let r = 0; r < rows; r++) {
-    const clue: number[] = [];
-    let count = 0;
-    for (let c = 0; c < cols; c++) {
-      if (solution[r * cols + c]) {
-        count++;
-      } else if (count > 0) {
-        clue.push(count);
-        count = 0;
-      }
-    }
-    if (count > 0) clue.push(count);
-    rowClues.push(clue.length > 0 ? clue : [0]);
-  }
-
-  const colClues: number[][] = [];
-  for (let c = 0; c < cols; c++) {
-    const clue: number[] = [];
-    let count = 0;
-    for (let r = 0; r < rows; r++) {
-      if (solution[r * cols + c]) {
-        count++;
-      } else if (count > 0) {
-        clue.push(count);
-        count = 0;
-      }
-    }
-    if (count > 0) clue.push(count);
-    colClues.push(clue.length > 0 ? clue : [0]);
-  }
-
+  const rowClues = Array.from({ length: rows }, (_, r) =>
+    generateClueSequence(solution.slice(r * cols, r * cols + cols))
+  );
+  const colClues = Array.from({ length: cols }, (_, c) =>
+    generateClueSequence(Array.from({ length: rows }, (_, r) => solution[r * cols + c]))
+  );
   return { rowClues, colClues };
 }
 

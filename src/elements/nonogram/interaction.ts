@@ -72,7 +72,7 @@ export async function acceptInk(
 
     const col = Math.floor(gridX / layout.cellWidth);
     const row = Math.floor(gridY / layout.cellHeight);
-    if (col < 0 || col >= cols || row < 0 || row >= rows) continue;
+    if (col >= cols || row >= rows) continue;
 
     hitCells.add(row * cols + col);
   }

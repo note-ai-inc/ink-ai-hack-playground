@@ -93,11 +93,7 @@ export function imageToNonogramGrid(imageDataUrl: string, rows: number, cols: nu
       const filledCount = grid.filter(Boolean).length;
       const filledRatio = filledCount / totalCells;
 
-      if (filledRatio < 0.15) {
-        const sorted = [...luminances].sort((a, b) => a - b);
-        threshold = sorted[Math.floor(totalCells * 0.4)];
-        grid = luminances.map(l => l < threshold);
-      } else if (filledRatio > 0.85) {
+      if (filledRatio < 0.15 || filledRatio > 0.85) {
         const sorted = [...luminances].sort((a, b) => a - b);
         threshold = sorted[Math.floor(totalCells * 0.4)];
         grid = luminances.map(l => l < threshold);
