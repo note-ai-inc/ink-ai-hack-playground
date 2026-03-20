@@ -14,6 +14,7 @@ import type { ImageElement } from '../elements/image/types';
 import type { SudokuElement } from '../elements/sudoku/types';
 import type { BridgesElement } from '../elements/bridges/types';
 import type { MinesweeperElement } from '../elements/minesweeper/types';
+import type { NonogramElement } from '../elements/nonogram/types';
 
 // Union type for all elements
 export type Element =
@@ -27,7 +28,8 @@ export type Element =
   | ImageElement
   | SudokuElement
   | BridgesElement
-  | MinesweeperElement;
+  | MinesweeperElement
+  | NonogramElement;
 
 // Check if element supports background color
 export function supportsBackgroundColor(element: Element): boolean {

@@ -10,6 +10,7 @@ import './glyph';
 import './image';
 import './inktext';
 import './minesweeper';
+import './nonogram';
 import './shape';
 import './sketchableimage';
 import './stroke';

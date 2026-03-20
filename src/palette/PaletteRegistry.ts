@@ -6,13 +6,19 @@
 import type { ComponentType } from 'react';
 import type { BoundingBox } from '../types/primitives';
 import type { Element } from '../types/elements';
+import type { Stroke } from '../types';
+
+export interface PaletteContext {
+  elements: Element[];
+  gestureStrokes: Stroke[];  // Rect+X gesture strokes to exclude from recognition
+}
 
 export interface PaletteEntry {
   id: string;
   label: string;
   Icon: ComponentType;
   category: 'image' | 'content' | 'game';
-  onSelect: (bounds: BoundingBox, consumeStrokes: () => void) => Promise<Element | null>;
+  onSelect: (bounds: BoundingBox, consumeStrokes: (...elementIds: string[]) => void, context?: PaletteContext) => Promise<Element | null>;
 }
 
 const paletteEntries: PaletteEntry[] = [];

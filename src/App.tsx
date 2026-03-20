@@ -25,6 +25,7 @@ import { findElementsInLasso, getStrokePoints, createSelectionIntent } from './l
 import type { SelectionIntent } from './lasso';
 import { useSketchableImageGeneration } from './hooks/useSketchableImageGeneration';
 import type { RefinementMode } from './hooks/useSketchableImageGeneration';
+import { useNonogramGeneration } from './hooks/useNonogramGeneration';
 import { STYLE_PRESETS, DEFAULT_STYLE_PRESET } from './services/stylePresets';
 import type { StylePresetKey } from './services/stylePresets';
 import { detectRectangleX, lastRectXRejection, type RectangleXResult } from './geometry/rectangleXDetection';
@@ -65,6 +66,7 @@ function App() {
   const [refinementMode, setRefinementMode] = useState<RefinementMode>('twoImage');
 
   useSketchableImageGeneration(currentNote, setCurrentNote, stylePreset, refinementMode);
+  useNonogramGeneration(currentNote, setCurrentNote);
 
   // Ref to always access the latest note state from async callbacks (avoids stale closures)
   const currentNoteRef = useRef(currentNote);
@@ -943,16 +945,27 @@ function App() {
       debugLog.info('Palette: user selected', { entryId, label: entry.label });
 
       let consumed = false;
-      const consumeStrokes = () => { consumed = true; };
+      const consumedElementIds: string[] = [];
+      const consumeStrokes = (...elementIds: string[]) => {
+        consumed = true;
+        consumedElementIds.push(...elementIds);
+      };
 
-      const newElement = await entry.onSelect(paletteIntent.rectangleBounds, consumeStrokes);
+      const newElement = await entry.onSelect(
+        paletteIntent.rectangleBounds,
+        consumeStrokes,
+        { elements: currentNoteRef.current.elements, gestureStrokes: paletteIntent.pendingStrokes },
+      );
 
       /* Read latest note AFTER await to avoid stale closure */
       const latestNote = currentNoteRef.current;
 
       /* Find and remove the temp stroke element that holds the gesture strokes */
       const gestureStrokeSet = new Set(paletteIntent.pendingStrokes);
+      const consumedIdSet = new Set(consumedElementIds);
       const remainingElements = latestNote.elements.filter(el => {
+        // Remove elements explicitly consumed by onSelect
+        if (consumedIdSet.has(el.id)) return false;
         if (el.type !== 'stroke') return true;
         return !el.strokes.some(s => gestureStrokeSet.has(s));
       });
