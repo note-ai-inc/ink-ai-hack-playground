@@ -1,10 +1,11 @@
 // Minesweeper Element Plugin
 
-import type { Element, MinesweeperElement } from '../../types';
-import { isMinesweeperElement, generateId } from '../../types';
+import { generateId } from '../../types';
+import type { MinesweeperElement } from './types';
 import type { ElementPlugin } from '../registry/ElementPlugin';
 import { registerPlugin } from '../registry/ElementRegistry';
 import { registerPaletteEntry } from '../../palette/PaletteRegistry';
+import { MinesweeperIcon } from './icon';
 import { isInterestedIn, acceptInk } from './interaction';
 import { render, getBounds } from './renderer';
 import { createEmptyState } from './gameState';
@@ -16,10 +17,6 @@ const minesweeperPlugin: ElementPlugin<MinesweeperElement> = {
   elementType: 'minesweeper',
   name: 'Minesweeper',
   triesEagerInteractions: true,
-
-  isElementOfType(element: Element): element is MinesweeperElement {
-    return isMinesweeperElement(element);
-  },
 
   isInterestedIn,
   acceptInk,
@@ -33,7 +30,7 @@ registerPlugin(minesweeperPlugin);
 registerPaletteEntry({
   id: 'minesweeper',
   label: 'Minesweeper',
-  icon: 'minesweeper',
+  Icon: MinesweeperIcon,
   category: 'game',
   onSelect: async (bounds, consumeStrokes) => {
     const rectWidth = bounds.right - bounds.left;

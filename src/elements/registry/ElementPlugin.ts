@@ -113,9 +113,6 @@ export interface ElementPlugin<T extends Element = Element> {
   readonly elementType: string; // Must match element's `type` field
   readonly name: string; // Human-readable name
 
-  // Type guard (required if element supports interaction)
-  isElementOfType?(element: Element): element is T;
-
   // Creation (optional)
   canCreate?(strokes: Stroke[]): boolean;
   createFromInk?(

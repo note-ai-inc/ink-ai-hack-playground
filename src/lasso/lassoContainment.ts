@@ -2,7 +2,7 @@
 // Determines which elements are selected by a lasso polygon
 
 import type { Offset, BoundingBox, Element, Stroke } from '../types';
-import { boundingBoxCenter, isStrokeElement } from '../types';
+import { boundingBoxCenter } from '../types';
 import { getElementBounds } from '../elements/rendering/ElementRenderer';
 import { pointInPolygon, polygonBoundingBox, boundingBoxInPolygon, boundingBoxIntersectsPolygon } from '../geometry/polygon';
 import { computeConcaveHull, simplifyPoints } from '../geometry/concaveHull';
@@ -125,7 +125,7 @@ function filterLassoStroke(
   if (!lassoStroke) return elements;
 
   return elements.filter(element => {
-    if (!isStrokeElement(element)) return true;
+    if (element.type !== 'stroke') return true;
 
     // Check if this element contains the lasso stroke
     for (const stroke of element.strokes) {

@@ -1,8 +1,8 @@
 // InkText creator - recognizes handwriting and creates InkTextElement
 
 import type { Stroke } from '../../types';
-import type { InkTextElement, InkTextLine, InkTextToken } from '../../types/elements';
-import { generateId } from '../../types/elements';
+import type { InkTextElement, InkTextLine, InkTextToken } from './types';
+import { generateId } from '../../types/primitives';
 import { IDENTITY_MATRIX, boundingBoxFromOffsets } from '../../types/primitives';
 import type { Offset, Quad, BoundingBox } from '../../types/primitives';
 import type { CreationContext, CreationResult } from '../registry/ElementPlugin';

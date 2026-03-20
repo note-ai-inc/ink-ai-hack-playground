@@ -1,6 +1,7 @@
 // Stroke element renderer
 
-import type { StrokeElement, BoundingBox } from '../../types';
+import type { BoundingBox } from '../../types';
+import type { StrokeElement } from './types';
 import { renderStrokes, getStrokesBounds } from '../../canvas/StrokeRenderer';
 import type { RenderOptions } from '../registry/ElementPlugin';
 

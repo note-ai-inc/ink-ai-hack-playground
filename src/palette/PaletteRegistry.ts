@@ -3,13 +3,14 @@
 // Extensible registry where plugins register palette options that appear
 // when the user draws a rectangle+X gesture.
 
+import type { ComponentType } from 'react';
 import type { BoundingBox } from '../types/primitives';
 import type { Element } from '../types/elements';
 
 export interface PaletteEntry {
   id: string;
   label: string;
-  icon: string;
+  Icon: ComponentType;
   category: 'image' | 'content' | 'game';
   onSelect: (bounds: BoundingBox, consumeStrokes: () => void) => Promise<Element | null>;
 }

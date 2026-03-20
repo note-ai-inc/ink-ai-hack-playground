@@ -1,6 +1,7 @@
 // Minesweeper element renderer
 
-import type { MinesweeperElement, BoundingBox } from '../../types';
+import type { BoundingBox } from '../../types';
+import type { MinesweeperElement } from './types';
 import type { RenderOptions } from '../registry/ElementPlugin';
 import type { MinesweeperGameState } from './gameState';
 import { rowOf, colOf } from './gameState';

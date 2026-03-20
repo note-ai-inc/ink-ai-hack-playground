@@ -3,8 +3,7 @@
 // Self-contained element type for TicTacToe games.
 // Importing this module automatically registers the plugin.
 
-import type { Element, TicTacToeElement } from '../../types';
-import { isTicTacToeElement } from '../../types';
+import type { TicTacToeElement } from './types';
 import type { ElementPlugin } from '../registry/ElementPlugin';
 import { registerPlugin } from '../registry/ElementRegistry';
 import { canCreate, createFromInk } from './creator';
@@ -14,11 +13,6 @@ import { render, getBounds } from './renderer';
 const ticTacToePlugin: ElementPlugin<TicTacToeElement> = {
   elementType: 'tictactoe',
   name: 'TicTacToe',
-
-  // Type guard
-  isElementOfType(element: Element): element is TicTacToeElement {
-    return isTicTacToeElement(element);
-  },
 
   // Creation
   canCreate,

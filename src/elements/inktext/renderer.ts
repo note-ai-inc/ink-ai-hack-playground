@@ -1,6 +1,7 @@
 // InkText element renderer
 
-import type { InkTextElement, BoundingBox } from '../../types';
+import type { BoundingBox } from '../../types';
+import type { InkTextElement } from './types';
 import { renderStrokes } from '../../canvas/StrokeRenderer';
 import type { RenderOptions } from '../registry/ElementPlugin';
 

@@ -1,6 +1,8 @@
 // Scribble-based eraser implementation
 
-import type { Offset, Element, InkTextElement, InkTextLine, InkTextToken, Stroke, CoordinatePlaneElement } from '../types';
+import type { Offset, Element, Stroke } from '../types';
+import type { InkTextElement, InkTextLine, InkTextToken } from '../elements/inktext/types';
+import type { CoordinatePlaneElement } from '../elements/coordinateplane/types';
 import { computeConcaveHull, getHullBounds, simplifyPoints } from '../geometry/concaveHull';
 import {
   calculateElementOverlap,

@@ -1,7 +1,7 @@
 // Minesweeper interaction - reveal cells or toggle flags via ink gestures
 
 import type { Stroke, BoundingBox } from '../../types';
-import type { MinesweeperElement } from '../../types/elements';
+import type { MinesweeperElement } from './types';
 import type { InteractionResult } from '../registry/ElementPlugin';
 import type { HandwritingRecognitionResult } from '../../recognition/RecognitionService';
 import { debugLog } from '../../debug/DebugLogger';

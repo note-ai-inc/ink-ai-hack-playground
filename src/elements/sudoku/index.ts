@@ -1,10 +1,11 @@
 // Sudoku Element Plugin
 
-import type { Element, SudokuElement } from '../../types';
-import { isSudokuElement, generateId } from '../../types';
+import { generateId } from '../../types';
+import type { SudokuElement } from './types';
 import type { ElementPlugin } from '../registry/ElementPlugin';
 import { registerPlugin } from '../registry/ElementRegistry';
 import { registerPaletteEntry } from '../../palette/PaletteRegistry';
+import { SudokuIcon } from './icon';
 import { isInterestedIn, acceptInk } from './interaction';
 import { render, getBounds } from './renderer';
 import { generatePuzzle } from './puzzleGenerator';
@@ -15,10 +16,6 @@ const GRID_SIZE = 9;
 const sudokuPlugin: ElementPlugin<SudokuElement> = {
   elementType: 'sudoku',
   name: 'Sudoku',
-
-  isElementOfType(element: Element): element is SudokuElement {
-    return isSudokuElement(element);
-  },
 
   isInterestedIn,
   acceptInk,
@@ -32,7 +29,7 @@ registerPlugin(sudokuPlugin);
 registerPaletteEntry({
   id: 'sudoku',
   label: 'Sudoku',
-  icon: 'sudoku',
+  Icon: SudokuIcon,
   category: 'game',
   onSelect: async (bounds, consumeStrokes) => {
     const rectSize = Math.max(bounds.right - bounds.left, bounds.bottom - bounds.top);

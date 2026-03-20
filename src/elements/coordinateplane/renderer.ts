@@ -1,6 +1,7 @@
 // CoordinatePlane element renderer
 
-import type { CoordinatePlaneElement, BoundingBox } from '../../types';
+import type { BoundingBox } from '../../types';
+import type { CoordinatePlaneElement } from './types';
 import { renderStrokes } from '../../canvas/StrokeRenderer';
 import type { RenderOptions } from '../registry/ElementPlugin';
 

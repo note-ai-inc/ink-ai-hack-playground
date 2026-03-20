@@ -10,18 +10,6 @@ import {
   getElementBounds as registryGetElementBounds,
 } from '../registry';
 
-// Import all plugins to ensure they're registered
-import '../bridges';
-import '../glyph';
-import '../image';
-import '../inktext';
-import '../minesweeper';
-import '../shape';
-import '../sketchableimage';
-import '../stroke';
-import '../sudoku';
-import '../tictactoe';
-
 export interface ElementRenderOptions {
   // Options to pass to stroke rendering
   strokeOptions?: StrokeRenderOptions;

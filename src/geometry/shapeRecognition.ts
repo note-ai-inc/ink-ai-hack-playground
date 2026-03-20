@@ -3,7 +3,7 @@
 import type { Offset, BoundingBox } from '../types/primitives';
 import { offsetDistance, boundingBoxFromOffsets } from '../types/primitives';
 import type { Stroke } from '../types/brush';
-import type { ShapePath, ShapePathCommand } from '../types/elements';
+import type { ShapePath, ShapePathCommand } from '../elements/shape/types';
 import type { Corner } from './cornerDetection';
 import {
   detectCorners,

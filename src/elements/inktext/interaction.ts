@@ -1,7 +1,7 @@
 // InkText interaction - append new strokes to existing handwritten text
 
 import type { Stroke, BoundingBox, Offset } from '../../types';
-import type { InkTextElement, InkTextLine, InkTextToken } from '../../types/elements';
+import type { InkTextElement, InkTextLine, InkTextToken } from './types';
 import { boundingBoxFromOffsets } from '../../types/primitives';
 import type { Quad } from '../../types/primitives';
 import type { InteractionResult } from '../registry/ElementPlugin';

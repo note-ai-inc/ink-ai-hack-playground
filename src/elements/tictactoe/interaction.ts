@@ -1,8 +1,8 @@
 // TicTacToe interaction - handle X moves and computer AI
 
 import type { Stroke, BoundingBox, Offset } from '../../types';
-import type { TicTacToeElement, TicTacToeCell } from '../../types/elements';
-import { TicTacToePiece, TicTacToeGameState } from '../../types/elements';
+import type { TicTacToeElement, TicTacToeCell } from './types';
+import { TicTacToePiece, TicTacToeGameState } from './types';
 import type { InteractionResult } from '../registry/ElementPlugin';
 import type { HandwritingRecognitionResult } from '../../recognition/RecognitionService';
 import { getRecognitionService } from '../../recognition/RecognitionService';

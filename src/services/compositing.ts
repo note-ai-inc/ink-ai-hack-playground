@@ -6,7 +6,7 @@
  */
 
 import type { Stroke } from '../types';
-import { SKETCHABLE_IMAGE_SIZE } from '../types';
+import { SKETCHABLE_IMAGE_SIZE } from '../elements/sketchableimage/types';
 import { renderStrokes } from '../canvas/StrokeRenderer';
 import { computeConcaveHull } from '../geometry/concaveHull';
 import type { Offset } from '../types/primitives';

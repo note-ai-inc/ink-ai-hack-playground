@@ -7,7 +7,7 @@
 // - We convert canvas -> local for comparisons and storage
 
 import type { Stroke, BoundingBox, Offset, Matrix } from '../../types';
-import type { CoordinatePlaneElement, PlottedPoint, RelativeStroke } from '../../types/elements';
+import type { CoordinatePlaneElement, PlottedPoint, RelativeStroke } from './types';
 import type { InteractionResult, HandleDescriptor, HandleDragPhase } from '../registry/ElementPlugin';
 import { getStrokesBoundingBox } from '../registry/ElementRegistry';
 import {

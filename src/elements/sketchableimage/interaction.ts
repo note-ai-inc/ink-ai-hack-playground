@@ -4,8 +4,8 @@
 // coordinates (0–512 range) before being appended to overlayStrokes.
 
 import type { Stroke, BoundingBox } from '../../types';
-import { SKETCHABLE_IMAGE_SIZE } from '../../types';
-import type { SketchableImageElement } from '../../types/elements';
+import type { SketchableImageElement } from './types';
+import { SKETCHABLE_IMAGE_SIZE } from './types';
 import type { InteractionResult } from '../registry/ElementPlugin';
 import { boundingBoxesIntersect } from '../../types/primitives';
 

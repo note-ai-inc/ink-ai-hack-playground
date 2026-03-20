@@ -1,6 +1,7 @@
 // Glyph element renderer
 
-import type { GlyphElement, BoundingBox } from '../../types';
+import type { BoundingBox } from '../../types';
+import type { GlyphElement } from './types';
 import { colorToCSSRGBA } from '../../types/brush';
 import type { RenderOptions } from '../registry/ElementPlugin';
 

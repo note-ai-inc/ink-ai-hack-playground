@@ -1,10 +1,11 @@
 // Bridges Element Plugin
 
-import type { Element, BridgesElement } from '../../types';
-import { isBridgesElement, generateId } from '../../types';
+import { generateId } from '../../types';
+import type { BridgesElement } from './types';
 import type { ElementPlugin } from '../registry/ElementPlugin';
 import { registerPlugin } from '../registry/ElementRegistry';
 import { registerPaletteEntry } from '../../palette/PaletteRegistry';
+import { BridgesIcon } from './icon';
 import { isInterestedIn, acceptInk } from './interaction';
 import { render, getBounds } from './renderer';
 import { generatePuzzle } from './puzzleGenerator';
@@ -16,10 +17,6 @@ const bridgesPlugin: ElementPlugin<BridgesElement> = {
   elementType: 'bridges',
   name: 'Bridges',
   triesEagerInteractions: true,
-
-  isElementOfType(element: Element): element is BridgesElement {
-    return isBridgesElement(element);
-  },
 
   isInterestedIn,
   acceptInk,
@@ -33,7 +30,7 @@ registerPlugin(bridgesPlugin);
 registerPaletteEntry({
   id: 'bridges',
   label: 'Bridges',
-  icon: 'bridges',
+  Icon: BridgesIcon,
   category: 'game',
   onSelect: async (bounds, consumeStrokes) => {
     const originX = Math.round(bounds.left / CANVAS_GRID) * CANVAS_GRID;

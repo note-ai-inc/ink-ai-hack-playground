@@ -1,7 +1,8 @@
 // TicTacToe element renderer
 
-import type { TicTacToeElement, BoundingBox, Quad } from '../../types';
-import { TicTacToePiece, TicTacToeGameState } from '../../types';
+import type { BoundingBox, Quad } from '../../types';
+import type { TicTacToeElement } from './types';
+import { TicTacToePiece, TicTacToeGameState } from './types';
 import { renderStrokes } from '../../canvas/StrokeRenderer';
 import type { RenderOptions } from '../registry/ElementPlugin';
 

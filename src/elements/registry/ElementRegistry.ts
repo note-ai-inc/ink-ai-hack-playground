@@ -395,16 +395,11 @@ export async function tryInteraction(
 
   for (const element of elements) {
     const plugin = plugins.get(element.type);
-    if (!plugin || !plugin.isInterestedIn || !plugin.acceptInk || !plugin.isElementOfType) {
+    if (!plugin || !plugin.isInterestedIn || !plugin.acceptInk) {
       continue;
     }
 
     if (isEagerInteraction && !plugin.triesEagerInteractions) {
-      continue;
-    }
-
-    // Type guard check
-    if (!plugin.isElementOfType(element)) {
       continue;
     }
 
@@ -443,7 +438,7 @@ export interface HandleHitResult {
  */
 export function getElementHandles(element: Element): HandleDescriptor[] {
   const plugin = plugins.get(element.type);
-  if (plugin?.getHandles && plugin.isElementOfType?.(element)) {
+  if (plugin?.getHandles) {
     return plugin.getHandles(element);
   }
   return [];
@@ -493,7 +488,7 @@ export function dispatchHandleDrag(
   point: Offset
 ): Element {
   const plugin = plugins.get(element.type);
-  if (plugin?.onHandleDrag && plugin.isElementOfType?.(element)) {
+  if (plugin?.onHandleDrag) {
     return plugin.onHandleDrag(element, handleId, phase, point);
   }
   return element;

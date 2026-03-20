@@ -142,7 +142,7 @@ export function PaletteMenu({
                 }}
                 title={entry.label}
               >
-                <PaletteIcon icon={entry.icon} />
+                <entry.Icon />
                 <span style={{ fontSize: '10px' }}>{entry.label}</span>
               </button>
             </React.Fragment>
@@ -199,82 +199,6 @@ export function PaletteMenu({
       />
     </div>
   );
-}
-
-function PaletteIcon({ icon }: { icon: string }) {
-  const size = 20;
-  const strokeWidth = 1.5;
-  const color = 'currentColor';
-
-  switch (icon) {
-    case 'camera':
-      return (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth}>
-          <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
-          <circle cx="12" cy="13" r="4" />
-        </svg>
-      );
-    case 'gallery':
-      return (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth}>
-          <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-          <circle cx="8.5" cy="8.5" r="1.5" />
-          <polyline points="21 15 16 10 5 21" />
-        </svg>
-      );
-    case 'aiSketch':
-      return (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth}>
-          <path d="M12 2L2 7l10 5 10-5-10-5z" />
-          <path d="M2 17l10 5 10-5" />
-          <path d="M2 12l10 5 10-5" />
-        </svg>
-      );
-    case 'minesweeper':
-      return (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth}>
-          <circle cx="12" cy="12" r="5" />
-          <line x1="12" y1="3" x2="12" y2="7" />
-          <line x1="12" y1="17" x2="12" y2="21" />
-          <line x1="3" y1="12" x2="7" y2="12" />
-          <line x1="17" y1="12" x2="21" y2="12" />
-          <line x1="5.6" y1="5.6" x2="8.5" y2="8.5" />
-          <line x1="15.5" y1="15.5" x2="18.4" y2="18.4" />
-          <line x1="5.6" y1="18.4" x2="8.5" y2="15.5" />
-          <line x1="15.5" y1="8.5" x2="18.4" y2="5.6" />
-        </svg>
-      );
-    case 'bridges':
-      return (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth}>
-          <circle cx="5" cy="5" r="3" />
-          <circle cx="19" cy="5" r="3" />
-          <circle cx="5" cy="19" r="3" />
-          <circle cx="19" cy="19" r="3" />
-          <line x1="8" y1="5" x2="16" y2="5" />
-          <line x1="5" y1="8" x2="5" y2="16" />
-          <line x1="19" y1="8" x2="19" y2="16" />
-        </svg>
-      );
-    case 'sudoku':
-      return (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth}>
-          <rect x="2" y="2" width="20" height="20" rx="1" />
-          <line x1="2" y1="8.7" x2="22" y2="8.7" />
-          <line x1="2" y1="15.3" x2="22" y2="15.3" />
-          <line x1="8.7" y1="2" x2="8.7" y2="22" />
-          <line x1="15.3" y1="2" x2="15.3" y2="22" />
-        </svg>
-      );
-    default:
-      return (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth}>
-          <circle cx="12" cy="12" r="10" />
-          <line x1="12" y1="8" x2="12" y2="16" />
-          <line x1="8" y1="12" x2="16" y2="12" />
-        </svg>
-      );
-  }
 }
 
 export default PaletteMenu;

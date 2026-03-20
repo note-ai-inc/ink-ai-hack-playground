@@ -1,8 +1,8 @@
 // Shape creator - recognizes hand-drawn shapes and converts to vector shapes
 
 import type { Stroke } from '../../types';
-import type { ShapeElement } from '../../types/elements';
-import { generateId } from '../../types/elements';
+import type { ShapeElement } from './types';
+import { generateId } from '../../types/primitives';
 import { IDENTITY_MATRIX } from '../../types/primitives';
 import { getStrokeBoundingBox } from '../../types/brush';
 import type { CreationContext, CreationResult } from '../registry/ElementPlugin';

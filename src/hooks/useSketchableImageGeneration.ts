@@ -5,8 +5,7 @@
 
 import { useEffect, useRef, useCallback, useMemo } from 'react';
 import type { NoteElements } from '../types';
-import { isSketchableImageElement } from '../types';
-import type { SketchableImageElement } from '../types/elements';
+import type { SketchableImageElement } from '../elements/sketchableimage/types';
 import { getFalAiService } from '../services/FalAiService';
 import { compositeStrokesOnWhite, compositeStrokesOnImage } from '../services/compositing';
 import { buildPrompt, buildIterativePrompt } from '../services/stylePresets';
@@ -54,13 +53,13 @@ export function useSketchableImageGeneration(
     (elementId: string, updater: (el: SketchableImageElement) => SketchableImageElement) => {
       const note = latestNoteRef.current;
       const hasElement = note.elements.some(
-        el => el.id === elementId && isSketchableImageElement(el)
+        el => el.id === elementId && el.type === 'sketchableImage'
       );
       if (!hasElement) return;
       syncSetCurrentNote({
         ...note,
         elements: note.elements.map(el =>
-          el.id === elementId && isSketchableImageElement(el) ? updater(el) : el
+          el.id === elementId && el.type === 'sketchableImage' ? updater(el as SketchableImageElement) : el
         ),
       });
     },
@@ -71,7 +70,7 @@ export function useSketchableImageGeneration(
     const note = latestNoteRef.current;
     const element = note.elements.find(
       (el): el is SketchableImageElement =>
-        isSketchableImageElement(el) && el.id === elementId
+        el.type === 'sketchableImage' && el.id === elementId
     );
     if (!element) return;
     if (element.overlayStrokes.length === 0) return;
@@ -170,7 +169,7 @@ export function useSketchableImageGeneration(
    */
   const sketchableFingerprint = useMemo(() => {
     return currentNote.elements
-      .filter(isSketchableImageElement)
+      .filter((el): el is SketchableImageElement => el.type === 'sketchableImage')
       .map(el => `${el.id}:${el.overlayStrokes.length}`)
       .join(',');
   }, [currentNote.elements]);
@@ -178,7 +177,7 @@ export function useSketchableImageGeneration(
   useEffect(() => {
     const elements = latestNoteRef.current.elements;
     for (const element of elements) {
-      if (!isSketchableImageElement(element)) continue;
+      if (element.type !== 'sketchableImage') continue;
       if (element.isGenerating) continue;
 
       /*

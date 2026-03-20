@@ -4,7 +4,7 @@
 // to toggle bridges: 0 → 1 → 2 → 0.
 
 import type { Stroke, BoundingBox } from '../../types';
-import type { BridgesElement } from '../../types/elements';
+import type { BridgesElement } from './types';
 import type { InteractionResult } from '../registry/ElementPlugin';
 import type { HandwritingRecognitionResult } from '../../recognition/RecognitionService';
 import { debugLog } from '../../debug/DebugLogger';

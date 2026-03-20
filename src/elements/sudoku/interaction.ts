@@ -1,7 +1,7 @@
 // Sudoku interaction - handle digit placement via handwriting recognition
 
 import type { Stroke, BoundingBox } from '../../types';
-import type { SudokuElement } from '../../types/elements';
+import type { SudokuElement } from './types';
 import type { InteractionResult } from '../registry/ElementPlugin';
 import type { HandwritingRecognitionResult } from '../../recognition/RecognitionService';
 import { getRecognitionService } from '../../recognition/RecognitionService';

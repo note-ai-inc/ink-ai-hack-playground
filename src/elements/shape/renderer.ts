@@ -1,6 +1,7 @@
 // Shape element renderer
 
-import type { ShapeElement, ShapePath, BoundingBox, Offset } from '../../types';
+import type { BoundingBox, Offset } from '../../types';
+import type { ShapeElement, ShapePath } from './types';
 import { colorToCSSRGBA } from '../../types/brush';
 import { applyMatrix } from '../../types/primitives';
 import type { RenderOptions } from '../registry/ElementPlugin';

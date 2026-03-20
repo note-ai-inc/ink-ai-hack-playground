@@ -1,7 +1,7 @@
 // CoordinatePlane creator - recognizes two arrow strokes and creates coordinate plane
 
 import type { Stroke } from '../../types';
-import { createCoordinatePlaneElement } from '../../types/elements';
+import { createCoordinatePlaneElement } from './types';
 import type { CreationContext, CreationResult } from '../registry/ElementPlugin';
 import { detectAndMatchArrows, type ArrowMatchResult } from './arrowDetection';
 import { debugLog } from '../../debug/DebugLogger';

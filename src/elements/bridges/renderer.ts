@@ -3,7 +3,8 @@
 // Renders islands as numbered circles and bridges as single/double lines
 // connecting them, with color feedback for island satisfaction status.
 
-import type { BridgesElement, BoundingBox } from '../../types';
+import type { BoundingBox } from '../../types';
+import type { BridgesElement } from './types';
 import type { RenderOptions } from '../registry/ElementPlugin';
 import { getBridgeCount, isComplete } from './gameState';
 

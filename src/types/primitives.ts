@@ -159,3 +159,13 @@ export function createRotationMatrix(angleRadians: number): Matrix {
     values: [cos, sin, 0, -sin, cos, 0, 0, 0, 1],
   };
 }
+
+// Base element properties shared by transformed elements
+export interface TransformableElement {
+  id: string;
+  transform: Matrix;
+}
+
+export function generateId(): string {
+  return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+}

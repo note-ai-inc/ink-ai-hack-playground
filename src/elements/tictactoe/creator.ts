@@ -2,11 +2,11 @@
 
 import type { Stroke } from '../../types';
 import type { Offset } from '../../types/primitives';
-import type { TicTacToeCell } from '../../types/elements';
+import type { TicTacToeCell } from './types';
 import {
   TicTacToePiece,
   createEmptyTicTacToeElement,
-} from '../../types/elements';
+} from './types';
 import { getStrokeBoundingBox } from '../../types/brush';
 import type { CreationContext, CreationResult } from '../registry/ElementPlugin';
 import type { HandwritingRecognitionResult } from '../../recognition/RecognitionService';

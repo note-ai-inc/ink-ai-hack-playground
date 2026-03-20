@@ -2,7 +2,7 @@
 //
 // Renders an image element on the canvas with LRU bitmap caching.
 
-import type { ImageElement } from '../../types/elements';
+import type { ImageElement } from './types';
 import type { BoundingBox } from '../../types/primitives';
 import type { RenderOptions } from '../registry/ElementPlugin';
 

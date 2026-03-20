@@ -3,7 +3,11 @@ import { InkCanvas } from './canvas/InkCanvas';
 import type { Tool } from './canvas/InkCanvas';
 import { sampleNotes } from './data/sampleNotes';
 import type { NoteElements, Stroke, Element } from './types';
-import { createEmptyNote, deserializeNoteElements, createStrokeElement, isStrokeElement, isTransformableElement, supportsBackgroundColor, getElementStrokeColor, getElementBackgroundColor, setElementStrokeColor, setElementBackgroundColor } from './types';
+import { createEmptyNote, deserializeNoteElements, supportsBackgroundColor, getElementStrokeColor, getElementBackgroundColor, setElementStrokeColor, setElementBackgroundColor } from './types';
+import { generateId, IDENTITY_MATRIX } from './types/primitives';
+import { createStrokeElement } from './elements/stroke/types';
+import type { ShapeElement } from './elements/shape/types';
+import { createSketchableImageElement } from './elements/sketchableimage/types';
 import { useUndoRedo, useUndoRedoKeyboard } from './state/useUndoRedo';
 import { getMostRecentCluster } from './recognition/StrokeClustering';
 // Import element plugins (auto-registers all plugins)
@@ -14,9 +18,6 @@ import { beautifyShape, extractFeatures } from './geometry/shapeRecognition';
 import { colorToHex } from './types/brush';
 import { hexToArgb } from './input/StrokeBuilder';
 import type { ShapeType } from './geometry/shapeRecognition';
-import type { ShapeElement } from './types/elements';
-import { generateId } from './types/elements';
-import { IDENTITY_MATRIX } from './types/primitives';
 import { debugLog, logElementCreated, logElementMutated, logElementDeleted } from './debug/DebugLogger';
 import { isMultiStrokeScribbleEraseGesture, getMultiStrokePoints } from './eraser/scribbleDetection';
 import { performScribbleErase } from './eraser/ScribbleEraser';
@@ -26,7 +27,6 @@ import { useSketchableImageGeneration } from './hooks/useSketchableImageGenerati
 import type { RefinementMode } from './hooks/useSketchableImageGeneration';
 import { STYLE_PRESETS, DEFAULT_STYLE_PRESET } from './services/stylePresets';
 import type { StylePresetKey } from './services/stylePresets';
-import { createSketchableImageElement } from './types/elements';
 import { detectRectangleX, lastRectXRejection } from './geometry/rectangleXDetection';
 import { createPaletteIntent } from './palette';
 import type { PaletteIntent, PaletteAction } from './palette';
@@ -44,7 +44,7 @@ const STROKE_DEBOUNCE_MS = 650;
 // Filter out StrokeElements whose strokes have been consumed by another element
 function removeConsumedStrokeElements(elements: Element[], consumedStrokes: Set<Stroke>): Element[] {
   return elements.filter(element => {
-    if (!isStrokeElement(element)) return true;
+    if (element.type !== 'stroke') return true;
     // Remove if ALL strokes in this element are consumed
     return !element.strokes.every(stroke => consumedStrokes.has(stroke));
   });
@@ -130,7 +130,7 @@ function App() {
       elements: currentNote.elements.map(element => {
         if (!elementIds.has(element.id)) return element;
 
-        if (isStrokeElement(element)) {
+        if (element.type === 'stroke') {
           // Move stroke by translating all input points
           return {
             ...element,
@@ -146,7 +146,7 @@ function App() {
               },
             })),
           };
-        } else if (isTransformableElement(element)) {
+        } else {
           // Move transformable element by updating transform translation
           // This works for all transformed elements including CoordinatePlane
           const values = [...element.transform.values] as [number, number, number, number, number, number, number, number, number];
@@ -157,7 +157,6 @@ function App() {
             transform: { values },
           };
         }
-        return element;
       }),
     });
   }, [currentNote, setCurrentNote]);

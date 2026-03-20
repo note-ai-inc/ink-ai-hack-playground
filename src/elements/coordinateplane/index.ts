@@ -5,8 +5,7 @@
 
 console.log('[CoordPlane] Module loading...');
 
-import type { Element, CoordinatePlaneElement } from '../../types';
-import { isCoordinatePlaneElement } from '../../types';
+import type { CoordinatePlaneElement } from './types';
 import type { ElementPlugin } from '../registry/ElementPlugin';
 import { registerPlugin } from '../registry/ElementRegistry';
 import { canCreate, createFromInk } from './creator';
@@ -18,11 +17,6 @@ console.log('[CoordPlane] Imports completed');
 const coordinatePlanePlugin: ElementPlugin<CoordinatePlaneElement> = {
   elementType: 'coordinatePlane',
   name: 'CoordinatePlane',
-
-  // Type guard
-  isElementOfType(element: Element): element is CoordinatePlaneElement {
-    return isCoordinatePlaneElement(element);
-  },
 
   // Creation
   canCreate,

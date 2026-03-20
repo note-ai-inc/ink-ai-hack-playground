@@ -4,7 +4,8 @@
 // user digits as handwritten strokes, conflict highlighting, and
 // completion overlay.
 
-import type { SudokuElement, BoundingBox } from '../../types';
+import type { BoundingBox } from '../../types';
+import type { SudokuElement } from './types';
 import { renderStrokes } from '../../canvas/StrokeRenderer';
 import type { RenderOptions } from '../registry/ElementPlugin';
 import {

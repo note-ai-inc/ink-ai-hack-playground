@@ -4,8 +4,9 @@
 // Shows an orange border and circular spinner while AI generation is in progress.
 // Cross-fades with a subtle bounce when a new image arrives.
 
-import type { SketchableImageElement, BoundingBox } from '../../types';
-import { SKETCHABLE_IMAGE_SIZE } from '../../types';
+import type { BoundingBox } from '../../types';
+import type { SketchableImageElement } from './types';
+import { SKETCHABLE_IMAGE_SIZE } from './types';
 import { renderStrokes } from '../../canvas/StrokeRenderer';
 import type { RenderOptions } from '../registry/ElementPlugin';
 

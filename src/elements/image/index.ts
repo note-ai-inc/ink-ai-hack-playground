@@ -3,12 +3,13 @@
 // Renders user-uploaded images (camera/gallery). Created via palette menu.
 // Importing this module automatically registers the plugin and palette entries.
 
-import type { Element, ImageElement } from '../../types';
-import { isImageElement, createImageElement } from '../../types';
+import type { ImageElement } from './types';
+import { createImageElement } from './types';
 import type { ElementPlugin, HandleDescriptor, HandleDragPhase } from '../registry/ElementPlugin';
 import { registerPlugin } from '../registry/ElementRegistry';
 import { render, getBounds } from './renderer';
 import { registerPaletteEntry } from '../../palette/PaletteRegistry';
+import { CameraIcon, GalleryIcon } from './icon';
 import { pickImage } from './imageLoader';
 import type { Offset } from '../../types/primitives';
 
@@ -17,10 +18,6 @@ const HANDLE_SIZE = 8;
 const imagePlugin: ElementPlugin<ImageElement> = {
   elementType: 'image',
   name: 'Image',
-
-  isElementOfType(element: Element): element is ImageElement {
-    return isImageElement(element);
-  },
 
   render,
   getBounds,
@@ -121,7 +118,7 @@ registerPlugin(imagePlugin);
 registerPaletteEntry({
   id: 'camera',
   label: 'Camera',
-  icon: 'camera',
+  Icon: CameraIcon,
   category: 'image',
   onSelect: async (bounds, consumeStrokes) => {
     const result = await pickImage('camera');
@@ -137,7 +134,7 @@ registerPaletteEntry({
 registerPaletteEntry({
   id: 'gallery',
   label: 'Gallery',
-  icon: 'gallery',
+  Icon: GalleryIcon,
   category: 'image',
   onSelect: async (bounds, consumeStrokes) => {
     const result = await pickImage('gallery');

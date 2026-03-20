@@ -1,6 +1,6 @@
 import { useRef, useEffect, useCallback, useState } from 'react';
-import type { NoteElements, Element, Stroke, Brush, InkTextElement } from '../types';
-import { isInkTextElement, isSketchableImageElement, isImageElement } from '../types';
+import type { NoteElements, Element, Stroke, Brush } from '../types';
+import type { InkTextElement } from '../elements/inktext/types';
 import { hasActiveTransitions as hasActiveImageTransitions } from '../elements/sketchableimage/renderer';
 import { hasActiveTicTacToeAnimations } from '../elements/tictactoe/renderer';
 import type { Viewport } from './ViewportManager';
@@ -394,7 +394,7 @@ export function InkCanvas({
     // Continue animation loop if there are active animations, generating elements, or image transitions
     const hasActiveAnimations = animatingElements && animatingElements.size > completedAnimations.length;
     const hasGenerating = noteElements.elements.some(
-      el => isSketchableImageElement(el) && el.isGenerating
+      el => el.type === 'sketchableImage' && el.isGenerating
     );
     if (hasActiveAnimations || hasGenerating || hasActiveImageTransitions() || hasActiveTicTacToeAnimations()) {
       animationFrameRef.current = requestAnimationFrame(render);
@@ -520,7 +520,7 @@ export function InkCanvas({
 
   // Start animation loop when animating elements change or elements are generating
   const hasGeneratingElements = noteElements.elements.some(
-    el => isSketchableImageElement(el) && el.isGenerating
+    el => el.type === 'sketchableImage' && el.isGenerating
   );
   useEffect(() => {
     const shouldAnimate = (animatingElements && animatingElements.size > 0) || hasGeneratingElements;
@@ -829,7 +829,7 @@ export function InkCanvas({
       }
 
       // Tap on an image element: select it and start dragging
-      if (clickedElement && isImageElement(clickedElement)) {
+      if (clickedElement && clickedElement.type === 'image') {
         onSelectionChange?.(new Set([clickedElement.id]));
         setIsDragging(true);
         isDraggingRef.current = true;
@@ -1247,7 +1247,7 @@ export function InkCanvas({
     if (!showDebugOverlay) return [];
 
     return noteElements.elements
-      .filter(isInkTextElement)
+      .filter((el): el is InkTextElement => el.type === 'inkText')
       .map((element) => {
         const bounds = getElementBounds(element);
         if (!bounds) return null;

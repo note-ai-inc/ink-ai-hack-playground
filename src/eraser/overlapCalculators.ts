@@ -1,22 +1,13 @@
 // Overlap calculation utilities for scribble eraser
 
-import type {
-  Offset,
-  BoundingBox,
-  Quad,
-  Stroke,
-  Element,
-  StrokeElement,
-  ShapeElement,
-  GlyphElement,
-  InkTextElement,
-  InkTextToken,
-  TicTacToeElement,
-  CoordinatePlaneElement,
-  ImageElement,
-  PlottedPoint,
-  RelativeStroke,
-} from '../types';
+import type { Offset, BoundingBox, Quad, Stroke, Element } from '../types';
+import type { StrokeElement } from '../elements/stroke/types';
+import type { ShapeElement } from '../elements/shape/types';
+import type { GlyphElement } from '../elements/glyph/types';
+import type { InkTextElement, InkTextToken } from '../elements/inktext/types';
+import type { TicTacToeElement } from '../elements/tictactoe/types';
+import type { CoordinatePlaneElement, PlottedPoint, RelativeStroke } from '../elements/coordinateplane/types';
+import type { ImageElement } from '../elements/image/types';
 import { pointInPolygon } from '../geometry';
 import { getElementBounds } from '../elements/rendering/ElementRenderer';
 import { boundingBoxesIntersect } from '../types/primitives';
