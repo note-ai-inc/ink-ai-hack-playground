@@ -192,19 +192,64 @@ function drawQueen(
   size: number,
   conflict: boolean,
 ): void {
-  ctx.save();
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.font = `${size}px serif`;
-  ctx.fillStyle = conflict ? QUEEN_CONFLICT_COLOR : QUEEN_NORMAL_COLOR;
+  // Crown shape mirrors the palette icon SVG (viewBox 0 0 24 24).
+  // Normalised to be centred at (0,0): original points minus (12, 11).
+  // Crown spans ±10 in X, -6..+6 in Y → we scale so height ≈ size.
+  const s = size / 11; // scale factor
 
-  // Subtle shadow for depth
-  if (!conflict) {
-    ctx.shadowColor = 'rgba(0,0,0,0.25)';
-    ctx.shadowBlur = 3;
+  // Crown polyline points (centred)
+  const pts: [number, number][] = [
+    [-10,  6],  // 2,17
+    [ -7, -4],  // 5,7
+    [-2.5, 2],  // 9.5,13
+    [  0, -6],  // 12,5   ← topmost peak
+    [ 2.5, 2],  // 14.5,13
+    [  7, -4],  // 19,7
+    [ 10,  6],  // 22,17
+  ];
+
+  const color = conflict ? QUEEN_CONFLICT_COLOR : QUEEN_NORMAL_COLOR;
+
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.scale(s, s);
+
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.6;
+  ctx.lineJoin = 'round';
+  ctx.lineCap = 'round';
+
+  // Subtle fill for depth
+  ctx.fillStyle = conflict
+    ? 'rgba(204,0,0,0.18)'
+    : 'rgba(26,26,46,0.10)';
+
+  // Crown outline (filled + stroked)
+  ctx.beginPath();
+  ctx.moveTo(pts[0][0], pts[0][1]);
+  for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]);
+  ctx.closePath(); // close back to first point to fill cleanly
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.moveTo(pts[0][0], pts[0][1]);
+  for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]);
+  ctx.stroke();
+
+  // Base bar
+  ctx.beginPath();
+  ctx.moveTo(-10, 6);
+  ctx.lineTo( 10, 6);
+  ctx.stroke();
+
+  // Jewel dots on the three peaks
+  ctx.fillStyle = color;
+  for (const [px, py] of [[-7, -4], [0, -6], [7, -4]] as [number, number][]) {
+    ctx.beginPath();
+    ctx.arc(px, py, 1.1, 0, Math.PI * 2);
+    ctx.fill();
   }
 
-  ctx.fillText('♛', cx, cy + size * 0.05);
   ctx.restore();
 }
 
