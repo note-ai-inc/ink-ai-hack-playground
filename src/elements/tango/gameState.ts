@@ -56,16 +56,14 @@ export function findConflicts(state: TangoGameState): number[] {
     }
   }
 
-  // Check row counts (if full)
+  // Check if either symbol exceeds its maximum count per row
   for (let r = 0; r < size; r++) {
     let circles = 0;
     let crosses = 0;
-    let filled = 0;
     for (let c = 0; c < size; c++) {
       const sym = grid[cellIndex(size, r, c)];
       if (sym === 'circle') circles++;
       else if (sym === 'cross') crosses++;
-      if (sym !== null) filled++;
     }
     const half = size / 2;
     if (circles > half || crosses > half) {
@@ -136,26 +134,6 @@ export function cycleCell(state: TangoGameState, index: number): TangoGameState 
 // ---------------------------------------------------------------------------
 // Puzzle generation
 // ---------------------------------------------------------------------------
-
-/** Solve via backtracking. Returns first valid solution or null. */
-function solve(
-  size: number,
-  grid: TangoSymbol[],
-  constraints: TangoConstraint[],
-): TangoSymbol[] | null {
-  const idx = grid.indexOf(null);
-  if (idx === -1) return [...grid]; // fully filled
-
-  for (const sym of ['circle', 'cross'] as TangoSymbol[]) {
-    grid[idx] = sym;
-    if (isValidPartial(size, grid, constraints, idx)) {
-      const result = solve(size, grid, constraints);
-      if (result) return result;
-    }
-    grid[idx] = null;
-  }
-  return null;
-}
 
 /** Count solutions (up to limit). Used to verify uniqueness. */
 function countSolutions(

@@ -6,7 +6,6 @@
 import type { BoundingBox } from '../../types';
 import type { TangoElement } from './types';
 import type { RenderOptions } from '../registry/ElementPlugin';
-import { isSolved } from './gameState';
 
 const CELL_BG = '#f5f5f5';
 const CELL_GIVEN_BG = '#e8e8e8';
@@ -75,6 +74,8 @@ function drawCells(
 ): void {
   const { gameState, conflictCells } = element;
   const { size } = gameState;
+  const conflictSet = new Set(conflictCells);
+  const givenSet = new Set(gameState.givenCells);
 
   for (let r = 0; r < size; r++) {
     for (let c = 0; c < size; c++) {
@@ -85,9 +86,9 @@ function drawCells(
       // Cell background
       if (element.isSolved) {
         ctx.fillStyle = SOLVED_FILL;
-      } else if (conflictCells.includes(idx)) {
+      } else if (conflictSet.has(idx)) {
         ctx.fillStyle = CONFLICT_FILL;
-      } else if (gameState.givenCells.includes(idx)) {
+      } else if (givenSet.has(idx)) {
         ctx.fillStyle = CELL_GIVEN_BG;
       } else {
         ctx.fillStyle = CELL_BG;

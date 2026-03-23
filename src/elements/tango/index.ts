@@ -12,6 +12,7 @@ import { generatePuzzle } from './gameState';
 
 const CANVAS_GRID = 50;
 const DEFAULT_SIZE = 6;
+const MAX_SIZE = 8;
 
 const tangoPlugin: ElementPlugin<TangoElement> = {
   elementType: 'tango',
@@ -38,7 +39,7 @@ registerPaletteEntry({
 
     // Determine grid size from drawn area (minimum 4, must be even)
     const drawnCells = Math.round(Math.min(rectWidth, rectHeight) / CANVAS_GRID);
-    let size = Math.max(DEFAULT_SIZE, drawnCells);
+    let size = Math.max(DEFAULT_SIZE, Math.min(drawnCells, MAX_SIZE));
     if (size % 2 !== 0) size += 1; // must be even
 
     const totalSize = size * CANVAS_GRID;
