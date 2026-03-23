@@ -37,10 +37,11 @@ registerPaletteEntry({
     const rectWidth = bounds.right - bounds.left;
     const rectHeight = bounds.bottom - bounds.top;
 
-    // Determine grid size from drawn area (minimum 4, must be even)
+    // Determine grid size from drawn area (must be even, clamped to 4–8)
     const drawnCells = Math.round(Math.min(rectWidth, rectHeight) / CANVAS_GRID);
-    let size = Math.max(DEFAULT_SIZE, Math.min(drawnCells, MAX_SIZE));
-    if (size % 2 !== 0) size += 1; // must be even
+    let size = Math.max(DEFAULT_SIZE, drawnCells);
+    if (size % 2 !== 0) size += 1;
+    size = Math.min(size, MAX_SIZE);
 
     const totalSize = size * CANVAS_GRID;
 

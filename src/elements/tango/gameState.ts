@@ -117,7 +117,8 @@ export function findConflicts(state: TangoGameState): number[] {
 
 /** Place a symbol in a cell, cycling: null → circle → cross → null */
 export function cycleCell(state: TangoGameState, index: number): TangoGameState {
-  if (state.givenCells.includes(index)) return state;
+  const givenSet = new Set(state.givenCells);
+  if (givenSet.has(index)) return state;
 
   const current = state.grid[index];
   let next: TangoSymbol;
@@ -142,6 +143,15 @@ function countSolutions(
   constraints: TangoConstraint[],
   limit: number,
 ): number {
+  return countSolutionsImpl(size, [...grid], constraints, limit);
+}
+
+function countSolutionsImpl(
+  size: number,
+  grid: TangoSymbol[],
+  constraints: TangoConstraint[],
+  limit: number,
+): number {
   const idx = grid.indexOf(null);
   if (idx === -1) return 1;
 
@@ -149,7 +159,7 @@ function countSolutions(
   for (const sym of ['circle', 'cross'] as TangoSymbol[]) {
     grid[idx] = sym;
     if (isValidPartial(size, grid, constraints, idx)) {
-      count += countSolutions(size, grid, constraints, limit - count);
+      count += countSolutionsImpl(size, grid, constraints, limit - count);
       if (count >= limit) { grid[idx] = null; return count; }
     }
     grid[idx] = null;
@@ -242,6 +252,10 @@ function isValidPartial(
 
 /** Generate a random Tango puzzle with a unique solution */
 export function generatePuzzle(size: number): TangoGameState {
+  if (size < 4 || size > 8 || size % 2 !== 0) {
+    throw new Error(`Invalid puzzle size: ${size}. Must be 4, 6, or 8.`);
+  }
+
   // 1. Generate a random valid completed grid
   const fullGrid = generateRandomSolution(size);
 
@@ -281,7 +295,9 @@ function generateRandomSolution(size: number): TangoSymbol[] {
     return false;
   }
 
-  fillRandom(0);
+  if (!fillRandom(0)) {
+    throw new Error(`Failed to generate a valid ${size}x${size} Tango grid`);
+  }
   return grid;
 }
 
@@ -336,7 +352,7 @@ function removeSymbols(
     const saved = grid[idx];
     grid[idx] = null;
 
-    if (countSolutions(size, [...grid], constraints, 2) !== 1) {
+    if (countSolutions(size, grid, constraints, 2) !== 1) {
       grid[idx] = saved; // can't remove — would make puzzle ambiguous
     }
   }
