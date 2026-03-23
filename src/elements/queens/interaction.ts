@@ -1,8 +1,11 @@
-// Queens interaction — tap/stroke in a cell cycles its state: empty → X → queen → empty.
-// Any single stroke whose centroid lands inside the grid triggers a cycle.
+// Queens interaction
+//
+// • Single tap (stroke in 1 cell)  → cycle that cell: empty → X → queen → empty
+// • Line through 2+ cells          → mark ALL touched cells as X (bulk cancel)
 
 import type { Stroke, BoundingBox } from '../../types';
 import type { QueensElement } from './types';
+import type { QueenCellState } from './types';
 import type { InteractionResult } from '../registry/ElementPlugin';
 import type { HandwritingRecognitionResult } from '../../recognition/RecognitionService';
 import { cycleCell, computeConflicts } from './gameState';
@@ -30,6 +33,20 @@ function findCell(element: QueensElement, canvasX: number, canvasY: number): num
   return row * n + col;
 }
 
+/** Returns ordered list of unique cell indices that the stroke passes through. */
+function cellsAlongStroke(element: QueensElement, stroke: Stroke): number[] {
+  const seen = new Set<number>();
+  const result: number[] = [];
+  for (const pt of stroke.inputs.inputs) {
+    const idx = findCell(element, pt.x, pt.y);
+    if (idx !== null && !seen.has(idx)) {
+      seen.add(idx);
+      result.push(idx);
+    }
+  }
+  return result;
+}
+
 export function isInterestedIn(
   element: QueensElement,
   _strokes: Stroke[],
@@ -48,31 +65,45 @@ export async function acceptInk(
     return { element, consumed: false, strokesConsumed: [] };
   }
 
-  // Accept any single stroke (tap)
   if (strokes.length !== 1) {
     return { element, consumed: false, strokesConsumed: [] };
   }
 
-  const inputs = strokes[0].inputs.inputs;
+  const stroke = strokes[0];
+  const inputs = stroke.inputs.inputs;
   if (inputs.length === 0) return { element, consumed: false, strokesConsumed: [] };
 
-  // Use centroid of stroke to determine target cell
-  const cx = inputs.reduce((s, p) => s + p.x, 0) / inputs.length;
-  const cy = inputs.reduce((s, p) => s + p.y, 0) / inputs.length;
+  const touchedCells = cellsAlongStroke(element, stroke);
+  if (touchedCells.length === 0) return { element, consumed: false, strokesConsumed: [] };
 
-  const cellIdx = findCell(element, cx, cy);
-  if (cellIdx === null) return { element, consumed: false, strokesConsumed: [] };
+  // ── Multi-cell line: bulk-cancel all touched cells as X ──────────────────
+  if (touchedCells.length >= 2) {
+    debugLog.info('Queens: bulk-cancel line', { cells: touchedCells.length });
 
+    const newCells = [...element.gameState.cells] as QueenCellState[];
+    for (const idx of touchedCells) {
+      newCells[idx] = 'x';
+    }
+    const newState = { ...element.gameState, cells: newCells, won: false };
+    const newConflicts = computeConflicts(newState);
+
+    return {
+      element: { ...element, gameState: newState, conflictCells: newConflicts },
+      consumed: true,
+      strokesConsumed: strokes,
+    };
+  }
+
+  // ── Single cell: cycle empty → X → queen → empty ─────────────────────────
+  const cellIdx = touchedCells[0];
   debugLog.info('Queens: cycling cell', { cellIdx, current: element.gameState.cells[cellIdx] });
 
   const newState = cycleCell(element.gameState, cellIdx);
   const newConflicts = computeConflicts(newState);
 
-  const updatedElement: QueensElement = {
-    ...element,
-    gameState: newState,
-    conflictCells: newConflicts,
+  return {
+    element: { ...element, gameState: newState, conflictCells: newConflicts },
+    consumed: true,
+    strokesConsumed: strokes,
   };
-
-  return { element: updatedElement, consumed: true, strokesConsumed: strokes };
 }
