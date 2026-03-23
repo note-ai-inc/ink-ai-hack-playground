@@ -1242,6 +1242,7 @@ export function InkCanvas({
       setViewport(newViewport);
       onViewportChange?.(newViewport);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- intentionally runs once when canvas is sized; hasInitialFit ref guards against re-runs
   }, [canvasSize.width, canvasSize.height]);
 
   // Determine cursor based on state

@@ -335,6 +335,13 @@ function App() {
     }, 1000);
   }, []);
 
+  // Clean up viewport save timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (viewportSaveTimeoutRef.current) clearTimeout(viewportSaveTimeoutRef.current);
+    };
+  }, []);
+
   // Auto-save note + viewport to localStorage with debounce
   const autoSaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
@@ -380,15 +387,16 @@ function App() {
    * Convert via ViewportManager.screenToCanvas() once exposed.
    */
   const handleAddSketchableImage = useCallback(() => {
+    const note = currentNoteRef.current;
     const centerX = Math.max(0, window.innerWidth / 2 - 256 - 300);
     const centerY = Math.max(0, window.innerHeight / 2 - 256 - 400);
     const element = createSketchableImageElement(centerX, centerY);
     setCurrentNote({
-      ...currentNote,
-      elements: [...currentNote.elements, element],
+      ...note,
+      elements: [...note.elements, element],
     });
     setSelectedElementIds(new Set([element.id]));
-  }, [currentNote, setCurrentNote]);
+  }, [setCurrentNote]);
 
   // Process a batch of strokes (after debounce window)
   const processStrokes = useCallback(async (strokes: Stroke[]) => {
