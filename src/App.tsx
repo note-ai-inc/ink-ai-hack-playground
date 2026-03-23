@@ -58,7 +58,10 @@ const VIEWPORT_STORAGE_KEY = 'ink-playground-viewport';
 function loadSavedNote(): NoteElements {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) return JSON.parse(saved) as NoteElements;
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (parsed && Array.isArray(parsed.elements)) return parsed as NoteElements;
+    }
   } catch { /* ignore */ }
   return { elements: [] };
 }
@@ -66,7 +69,12 @@ function loadSavedNote(): NoteElements {
 function loadSavedViewport(): Viewport | undefined {
   try {
     const saved = localStorage.getItem(VIEWPORT_STORAGE_KEY);
-    if (saved) return JSON.parse(saved) as Viewport;
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (parsed && typeof parsed.panX === 'number' && typeof parsed.panY === 'number' && typeof parsed.zoom === 'number') {
+        return parsed as Viewport;
+      }
+    }
   } catch { /* ignore */ }
   return undefined;
 }
@@ -147,9 +155,10 @@ function App() {
   const handleElementsMove = useCallback((elementIds: Set<string>, dx: number, dy: number) => {
     if (elementIds.size === 0 || (dx === 0 && dy === 0)) return;
 
+    const note = currentNoteRef.current;
     setCurrentNote({
-      ...currentNote,
-      elements: currentNote.elements.map(element => {
+      ...note,
+      elements: note.elements.map(element => {
         if (!elementIds.has(element.id)) return element;
 
         if (element.type === 'stroke') {
@@ -181,7 +190,7 @@ function App() {
         }
       }),
     });
-  }, [currentNote, setCurrentNote]);
+  }, [setCurrentNote]);
 
   // Wrap undo/redo to clear pending strokes, debounce buffer, selection, and intents
   const undo = useCallback(() => {
@@ -316,19 +325,14 @@ function App() {
   // Viewport state for persistence
   const [savedViewport] = useState<Viewport | undefined>(loadSavedViewport);
   const viewportRef = useRef<Viewport | undefined>(savedViewport);
+  const viewportSaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const handleViewportChange = useCallback((v: Viewport) => {
     viewportRef.current = v;
-  }, []);
-
-  // Save viewport on page unload so pan/zoom is never lost
-  useEffect(() => {
-    const saveViewport = () => {
-      if (viewportRef.current) {
-        try { localStorage.setItem(VIEWPORT_STORAGE_KEY, JSON.stringify(viewportRef.current)); } catch { /* ignore */ }
-      }
-    };
-    window.addEventListener('beforeunload', saveViewport);
-    return () => window.removeEventListener('beforeunload', saveViewport);
+    // Debounced save for viewport-only changes (pan/zoom without drawing)
+    if (viewportSaveTimeoutRef.current) clearTimeout(viewportSaveTimeoutRef.current);
+    viewportSaveTimeoutRef.current = setTimeout(() => {
+      try { localStorage.setItem(VIEWPORT_STORAGE_KEY, JSON.stringify(v)); } catch { /* ignore */ }
+    }, 1000);
   }, []);
 
   // Auto-save note + viewport to localStorage with debounce

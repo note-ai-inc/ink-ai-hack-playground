@@ -1,4 +1,9 @@
 // OpenRouter service - client for LLM inference via OpenRouter
+//
+// WARNING: The API key (INK_OPENROUTER_API_KEY) is embedded into the client
+// bundle at build time and visible in browser DevTools. Only use a scoped,
+// low-privilege, rate-limited key. For production, route calls through a
+// backend proxy that holds the secret server-side.
 
 import { OpenRouter } from '@openrouter/sdk';
 
@@ -93,12 +98,7 @@ export async function chatCompletionJSON<T = unknown>(
     ...options,
     responseFormat: options.responseFormat ?? 'json',
   });
-  let parsed = JSON.parse(raw);
-  // Some models wrap the response in an array — unwrap it
-  if (Array.isArray(parsed) && parsed.length === 1) {
-    parsed = parsed[0];
-  }
-  return parsed as T;
+  return JSON.parse(raw) as T;
 }
 
 /**

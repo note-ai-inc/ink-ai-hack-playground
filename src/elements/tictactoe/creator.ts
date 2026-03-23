@@ -248,7 +248,7 @@ interface HashRecognitionResult {
 
 /**
  * Convert strokes to a compact polyline representation for the LLM.
- * Downsamples to at most ~20 points per stroke to keep the payload small.
+ * Downsamples to at most ~6 points per stroke to keep the payload small.
  */
 function strokesToPolylines(strokes: Stroke[]): number[][][] {
   return strokes.map((stroke) => {
@@ -297,8 +297,10 @@ async function tryLLMRecognition(strokes: Stroke[]): Promise<HashRecognitionResu
       { model: 'google/gemini-2.0-flash-lite-001', temperature: 0, maxTokens: 80 },
     );
 
-    debugLog.info('TicTacToe: LLM recognition result', result);
-    return result;
+    // Some models wrap JSON responses in an array — unwrap if needed
+    const unwrapped = Array.isArray(result) ? result[0] : result;
+    debugLog.info('TicTacToe: LLM recognition result', unwrapped);
+    return unwrapped;
   } catch (error) {
     debugLog.warn('TicTacToe: LLM recognition failed', error);
     return null;
@@ -361,11 +363,16 @@ export async function createFromInk(
 
   debugLog.info('TicTacToe: line classification', { horizontal: horizontalLines.length, vertical: verticalLines.length });
 
+  // Cache LLM result so we don't call twice (once for fallback, once for confidence)
+  let llmResult: HashRecognitionResult | null = null;
+  let llmCalled = false;
+
   // Must have exactly 2 horizontal and 2 vertical lines
   if (horizontalLines.length !== 2 || verticalLines.length !== 2) {
     // Could be slightly angled - try LLM recognition to confirm "#"
     debugLog.info('TicTacToe: not 2+2 lines, trying LLM recognition');
-    const llmResult = await tryLLMRecognition(strokes);
+    llmResult = await tryLLMRecognition(strokes);
+    llmCalled = true;
     if (!llmResult || !llmResult.isHash || llmResult.confidence < 0.7) {
       debugLog.warn('TicTacToe: LLM recognition did not confirm hash', { llmResult });
       return null;
@@ -396,7 +403,9 @@ export async function createFromInk(
   // LLM recognition is optional - geometric detection is sufficient
   // We use it as a confidence hint, not a hard requirement
   let confidence = 0.9;
-  const llmResult = await tryLLMRecognition(strokes);
+  if (!llmCalled) {
+    llmResult = await tryLLMRecognition(strokes);
+  }
   if (llmResult) {
     if (llmResult.isHash && llmResult.confidence >= 0.7) {
       confidence = 0.95;
