@@ -235,8 +235,8 @@ registerPaletteEntry({
   label: 'Checkbox',
   Icon: CheckboxIcon,
   category: 'content',
-  onSelect: async (bounds, consumeStrokes) => {
-    consumeStrokes();
+  onSelect: async (bounds, consumeStrokes, context?) => {
+    consumeStrokes();  // or consumeStrokes(...elementIds) to remove existing elements
     return {
       type: 'checkbox' as const,
       id: generateId(),
@@ -299,3 +299,4 @@ interface ElementPlugin<T extends Element> {
 - **Full-featured (creation + interaction)**: See `src/elements/tictactoe/`
 - **Game with palette entry**: See `src/elements/minesweeper/`, `src/elements/bridges/`
 - **Handle-based resizing**: See `src/elements/image/`
+- **Palette with context**: See `src/elements/nonogram/` (uses `consumeStrokes(...ids)` and `context`)

@@ -11,6 +11,7 @@ import './image';
 import './inktext';
 import './minesweeper';
 import './nonogram';
+import './queens';
 import './shape';
 import './sketchableimage';
 import './stroke';
