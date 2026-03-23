@@ -4,7 +4,7 @@
  * Real implementation calls Gemini gemini-3.1-flash-image-preview endpoint.
  * Fake implementation returns a generated pixel-art placeholder for local development.
  *
- * WARNING: The API key (VITE_GEMINI_API_KEY) is embedded into the client
+ * WARNING: The API key (INK_GEMINI_API_KEY) is embedded into the client
  * bundle at build time and visible in browser DevTools. Only use a scoped,
  * low-privilege, rate-limited key. For production, route calls through a
  * backend proxy that holds the secret server-side.
@@ -147,7 +147,7 @@ let instance: GeminiImageServiceInterface | null = null;
 
 export function getGeminiImageService(): GeminiImageServiceInterface {
   if (!instance) {
-    const apiKey = import.meta.env.VITE_GEMINI_API_KEY as string | undefined;
+    const apiKey = import.meta.env.INK_GEMINI_API_KEY as string | undefined;
     if (apiKey) {
       instance = new GeminiImageService(apiKey);
     } else {

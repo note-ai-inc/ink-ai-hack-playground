@@ -1,9 +1,10 @@
 import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { InkCanvas } from './canvas/InkCanvas';
 import type { Tool } from './canvas/InkCanvas';
-import { sampleNotes } from './data/sampleNotes';
+import type { Viewport } from './canvas/ViewportManager';
+
 import type { NoteElements, Stroke, Element } from './types';
-import { createEmptyNote, deserializeNoteElements, supportsBackgroundColor, getElementStrokeColor, getElementBackgroundColor, setElementStrokeColor, setElementBackgroundColor } from './types';
+import { createEmptyNote, supportsBackgroundColor, getElementStrokeColor, getElementBackgroundColor, setElementStrokeColor, setElementBackgroundColor } from './types';
 import { generateId, IDENTITY_MATRIX } from './types/primitives';
 import { createStrokeElement } from './elements/stroke/types';
 import type { ShapeElement } from './elements/shape/types';
@@ -34,7 +35,7 @@ import type { PaletteIntent, PaletteAction } from './palette';
 import { Toaster } from './toast/Toast';
 import './App.css';
 
-type SampleNoteKey = keyof typeof sampleNotes;
+
 
 // Animation duration in milliseconds
 const STROKE_ANIMATION_DURATION = 500;
@@ -51,6 +52,25 @@ function removeConsumedStrokeElements(elements: Element[], consumedStrokes: Set<
   });
 }
 
+const STORAGE_KEY = 'ink-playground-note';
+const VIEWPORT_STORAGE_KEY = 'ink-playground-viewport';
+
+function loadSavedNote(): NoteElements {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) return JSON.parse(saved) as NoteElements;
+  } catch { /* ignore */ }
+  return { elements: [] };
+}
+
+function loadSavedViewport(): Viewport | undefined {
+  try {
+    const saved = localStorage.getItem(VIEWPORT_STORAGE_KEY);
+    if (saved) return JSON.parse(saved) as Viewport;
+  } catch { /* ignore */ }
+  return undefined;
+}
+
 function App() {
   const {
     current: currentNote,
@@ -60,7 +80,7 @@ function App() {
     canUndo,
     canRedo,
     reset: resetNote,
-  } = useUndoRedo<NoteElements>(sampleNotes.mixed);
+  } = useUndoRedo<NoteElements>(loadSavedNote());
 
   const [stylePreset, setStylePreset] = useState<StylePresetKey>(DEFAULT_STYLE_PRESET);
   const [refinementMode, setRefinementMode] = useState<RefinementMode>('twoImage');
@@ -192,7 +212,6 @@ function App() {
     redoBase();
   }, [redoBase]);
 
-  const [selectedSample, setSelectedSample] = useState<SampleNoteKey>('mixed');
   const [showDebug, setShowDebug] = useState(false);
   const [currentTool, setCurrentTool] = useState<Tool>('pen');
   const [brushColor, setBrushColor] = useState('#000000');
@@ -202,6 +221,8 @@ function App() {
   const selectedElements = useMemo(() => {
     return currentNote.elements.filter(el => selectedElementIds.has(el.id));
   }, [currentNote.elements, selectedElementIds]);
+
+  const hasSelectedSketchImage = selectedElements.some(el => el.type === 'sketchableImage');
 
   const selectionStrokeColor = useMemo((): number | 'mixed' | undefined => {
     if (selectedElements.length === 0) return undefined;
@@ -225,6 +246,9 @@ function App() {
   const backgroundColorEnabled = useMemo(() => {
     return selectedElements.length > 0 && selectedElements.every(supportsBackgroundColor);
   }, [selectedElements]);
+
+  // Drawing controls (stroke color, brush size) are enabled when pen tool is active or elements are selected
+  const drawingControlsEnabled = currentTool === 'pen' || selectedElements.length > 0;
 
   // Enable keyboard shortcuts for undo/redo
   useUndoRedoKeyboard(undo, redo);
@@ -289,66 +313,43 @@ function App() {
     });
   }, [selectedElementIds, currentNote, setCurrentNote]);
 
-  // Handle sample selection
-  const handleSampleChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
-    const key = e.target.value as SampleNoteKey;
-    setSelectedSample(key);
-    resetNote(sampleNotes[key]);
-    pendingStrokesRef.current = []; // Clear pending strokes when loading a sample
-    strokeBufferRef.current = [];
-    if (debounceTimeoutRef.current) {
-      clearTimeout(debounceTimeoutRef.current);
-      debounceTimeoutRef.current = null;
-    }
-    setSelectedElementIds(new Set()); // Clear selection when loading a sample
-    setSelectionIntent(null); // Clear lasso selection intent
-    setDisambiguationIntent(null); // Clear disambiguation intent
-    setPaletteIntent(null); // Clear palette intent
-    debugLog.action(`Loaded sample: ${key}`, { elements: sampleNotes[key].elements.length });
-  }, [resetNote]);
+  // Viewport state for persistence
+  const [savedViewport] = useState<Viewport | undefined>(loadSavedViewport);
+  const viewportRef = useRef<Viewport | undefined>(savedViewport);
+  const handleViewportChange = useCallback((v: Viewport) => {
+    viewportRef.current = v;
+  }, []);
 
-  // Handle file import
-  const handleFileImport = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      try {
-        const json = event.target?.result as string;
-        const noteElements = deserializeNoteElements(json);
-        resetNote(noteElements);
-        pendingStrokesRef.current = []; // Clear pending strokes when importing
-        strokeBufferRef.current = [];
-        if (debounceTimeoutRef.current) {
-          clearTimeout(debounceTimeoutRef.current);
-          debounceTimeoutRef.current = null;
-        }
-        setSelectedSample('' as SampleNoteKey);
-        setSelectedElementIds(new Set()); // Clear selection when importing
-        setSelectionIntent(null); // Clear lasso selection intent
-        setDisambiguationIntent(null); // Clear disambiguation intent
-        setPaletteIntent(null); // Clear palette intent
-        debugLog.action(`Imported file: ${file.name}`, { elements: noteElements.elements.length });
-      } catch (err) {
-        debugLog.error(`Failed to load file: ${file.name}`, err);
-        alert(`Failed to load file: ${err instanceof Error ? err.message : 'Unknown error'}`);
+  // Save viewport on page unload so pan/zoom is never lost
+  useEffect(() => {
+    const saveViewport = () => {
+      if (viewportRef.current) {
+        try { localStorage.setItem(VIEWPORT_STORAGE_KEY, JSON.stringify(viewportRef.current)); } catch { /* ignore */ }
       }
     };
-    reader.readAsText(file);
-  }, [resetNote]);
+    window.addEventListener('beforeunload', saveViewport);
+    return () => window.removeEventListener('beforeunload', saveViewport);
+  }, []);
 
-  // Handle export
-  const handleExport = useCallback(() => {
-    const json = JSON.stringify(currentNote, null, 2);
-    const blob = new Blob([json], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `note-${Date.now()}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-    debugLog.action('Exported note', { elements: currentNote.elements.length });
+  // Auto-save note + viewport to localStorage with debounce
+  const autoSaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    if (autoSaveTimeoutRef.current) {
+      clearTimeout(autoSaveTimeoutRef.current);
+    }
+    autoSaveTimeoutRef.current = setTimeout(() => {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(currentNote));
+        if (viewportRef.current) {
+          localStorage.setItem(VIEWPORT_STORAGE_KEY, JSON.stringify(viewportRef.current));
+        }
+      } catch {
+        // localStorage full or unavailable — silently ignore
+      }
+    }, 1000);
+    return () => {
+      if (autoSaveTimeoutRef.current) clearTimeout(autoSaveTimeoutRef.current);
+    };
   }, [currentNote]);
 
   // Handle new note
@@ -360,11 +361,12 @@ function App() {
       clearTimeout(debounceTimeoutRef.current);
       debounceTimeoutRef.current = null;
     }
-    setSelectedSample('' as SampleNoteKey);
     setSelectedElementIds(new Set()); // Clear selection when creating new note
     setSelectionIntent(null); // Clear lasso selection intent
     setDisambiguationIntent(null); // Clear disambiguation intent
     setPaletteIntent(null); // Clear palette intent
+    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(VIEWPORT_STORAGE_KEY);
     debugLog.action('Created new note');
   }, [resetNote]);
 
@@ -381,6 +383,7 @@ function App() {
       ...currentNote,
       elements: [...currentNote.elements, element],
     });
+    setSelectedElementIds(new Set([element.id]));
   }, [currentNote, setCurrentNote]);
 
   // Process a batch of strokes (after debounce window)
@@ -406,6 +409,8 @@ function App() {
           el.id === elementId ? result.element : el
         ),
       });
+      // Auto-select the element that consumed the strokes
+      setSelectedElementIds(new Set([elementId]));
       return;
     }
 
@@ -679,6 +684,8 @@ function App() {
           el.id === elementId ? result.element : el
         ),
       });
+      // Auto-select the element that consumed the stroke
+      setSelectedElementIds(new Set([elementId]));
       return;
     }
 
@@ -1005,6 +1012,8 @@ function App() {
           onStrokeComplete={handleStrokeComplete}
           onDrawingStart={handleDrawingStart}
           onElementsChange={handleElementsChange}
+          initialViewport={savedViewport}
+          onViewportChange={handleViewportChange}
           animatingElements={animatingElements}
           animationDuration={STROKE_ANIMATION_DURATION}
           onAnimationComplete={handleAnimationComplete}
@@ -1028,32 +1037,72 @@ function App() {
 
         <div className="toolbar-section tool-buttons">
           <button
+            onClick={handleNewNote}
+            title="New canvas"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/>
+              <path d="M14 2v6h6"/>
+              <path d="M12 18v-6"/>
+              <path d="M9 15h6"/>
+            </svg>
+          </button>
+        </div>
+
+        <div className="toolbar-divider" />
+
+        <div className="toolbar-section tool-buttons">
+          <button
             className={currentTool === 'pen' ? 'active' : ''}
             onClick={() => setCurrentTool('pen')}
             title="Pen tool (P)"
           >
-            ✏️
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
+              <path d="m15 5 4 4"/>
+            </svg>
           </button>
           <button
             className={currentTool === 'select' ? 'active' : ''}
             onClick={() => setCurrentTool('select')}
             title="Select tool (S) - drag to select elements"
           >
-            ◻️
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M5 3l14 8-6 2-4 6z"/>
+              <path d="M14 15l4 4"/>
+            </svg>
           </button>
           <button
             className={currentTool === 'eraser' ? 'active' : ''}
             onClick={() => setCurrentTool('eraser')}
             title="Eraser tool (E)"
           >
-            🧹
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/>
+              <path d="M22 21H7"/>
+              <path d="m5 11 9 9"/>
+            </svg>
           </button>
           <button
             className={currentTool === 'pan' ? 'active' : ''}
             onClick={() => setCurrentTool('pan')}
             title="Pan tool (H) - or hold Space"
           >
-            ✋
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M18 11V6a2 2 0 0 0-4 0v1"/>
+              <path d="M14 10V4a2 2 0 0 0-4 0v2"/>
+              <path d="M10 10.5V6a2 2 0 0 0-4 0v8"/>
+              <path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.9-5.9-2.6L3.3 16c-.8-1-.2-2.5 1-2.8a1.9 1.9 0 0 1 2 .6L8 16"/>
+            </svg>
+          </button>
+          <button
+            onClick={handleAddSketchableImage}
+            title="Add AI sketch canvas"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+              <circle cx="12" cy="12" r="4"/>
+            </svg>
           </button>
         </div>
 
@@ -1066,7 +1115,10 @@ function App() {
             title="Undo (Cmd+Z)"
             style={{ opacity: canUndo ? 1 : 0.5 }}
           >
-            ↩️
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M9 14 4 9l5-5"/>
+              <path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/>
+            </svg>
           </button>
           <button
             onClick={redo}
@@ -1074,13 +1126,35 @@ function App() {
             title="Redo (Cmd+Shift+Z)"
             style={{ opacity: canRedo ? 1 : 0.5 }}
           >
-            ↪️
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M15 14l5-5-5-5"/>
+              <path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13"/>
+            </svg>
+          </button>
+          <button
+            className={showDebug ? 'active' : ''}
+            onClick={() => setShowDebug(d => !d)}
+            title="Toggle debug overlay"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="m8 2 1.88 1.88"/>
+              <path d="M14.12 3.88 16 2"/>
+              <path d="M9 7.13v-1a3.003 3.003 0 1 1 6 0v1"/>
+              <path d="M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v3c0 3.3-2.7 6-6 6"/>
+              <path d="M12 20v-9"/>
+              <path d="M6.53 9C4.6 8.8 3 7.1 3 5"/>
+              <path d="M6 13H2"/>
+              <path d="M3 21c0-2.1 1.7-3.9 3.8-4"/>
+              <path d="M20.97 5c0 2.1-1.6 3.8-3.5 4"/>
+              <path d="M22 13h-4"/>
+              <path d="M17.2 17c2.1.1 3.8 1.9 3.8 4"/>
+            </svg>
           </button>
         </div>
 
         <div className="toolbar-divider" />
 
-        <div className="toolbar-section color-picker">
+        <div className="toolbar-section color-picker" style={{ opacity: drawingControlsEnabled ? 1 : 0.4 }}>
           {/* Stroke color picker */}
           <div className="color-picker-item" title="Stroke color">
             <input
@@ -1089,6 +1163,7 @@ function App() {
                 ? colorToHex(selectionStrokeColor)
                 : brushColor}
               onChange={handleStrokeColorChange}
+              disabled={!drawingControlsEnabled}
               className={selectionStrokeColor === 'mixed' ? 'mixed-color' : ''}
             />
             {selectionStrokeColor === 'mixed' && <span className="mixed-indicator">?</span>}
@@ -1102,14 +1177,14 @@ function App() {
                 ? colorToHex(selectionBackgroundColor)
                 : '#ffffff'}
               onChange={handleBackgroundColorChange}
-              disabled={!backgroundColorEnabled}
+              disabled={!drawingControlsEnabled || !backgroundColorEnabled}
               className={selectionBackgroundColor === 'mixed' ? 'mixed-color' : ''}
             />
             {selectionBackgroundColor === 'mixed' && <span className="mixed-indicator">?</span>}
           </div>
         </div>
 
-        <div className="toolbar-section brush-size">
+        <div className="toolbar-section brush-size" style={{ opacity: drawingControlsEnabled ? 1 : 0.4 }}>
           <input
             type="range"
             min="1"
@@ -1117,39 +1192,24 @@ function App() {
             value={brushSize}
             onChange={(e) => setBrushSize(Number(e.target.value))}
             title="Brush size"
+            disabled={!drawingControlsEnabled}
           />
           <span>{brushSize}</span>
         </div>
 
-        <div className="toolbar-divider" />
+      </header>
 
-        <div className="toolbar-section">
+      {hasSelectedSketchImage && (
+        <div className="toolbar toolbar-secondary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.6, flexShrink: 0 }}>
+            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+            <circle cx="12" cy="12" r="4"/>
+          </svg>
           <label>
-            Sample:
-            <select value={selectedSample} onChange={handleSampleChange}>
-              <option value="simpleStrokes">Simple Strokes</option>
-              <option value="tictactoe">TicTacToe</option>
-              <option value="mixed">Mixed Content</option>
-            </select>
-          </label>
-        </div>
-
-        <div className="toolbar-section">
-          <label className="file-input">
-            Import
-            <input type="file" accept=".json" onChange={handleFileImport} />
-          </label>
-          <button onClick={handleExport}>Export</button>
-          <button onClick={handleNewNote}>New</button>
-          <button onClick={handleAddSketchableImage} title="Add AI sketch canvas">AI Sketch</button>
-        </div>
-
-        <div className="toolbar-section">
-          <label>
-            Style:
             <select
               value={stylePreset}
               onChange={(e) => setStylePreset(e.target.value as StylePresetKey)}
+              title="AI Sketch style preset"
             >
               {Object.keys(STYLE_PRESETS).map(key => (
                 <option key={key} value={key}>{key}</option>
@@ -1157,28 +1217,17 @@ function App() {
             </select>
           </label>
           <label>
-            Refine:
             <select
               value={refinementMode}
               onChange={(e) => setRefinementMode(e.target.value as RefinementMode)}
+              title="AI Sketch refinement mode"
             >
               <option value="twoImage">Two-Image</option>
               <option value="composite">Composite</option>
             </select>
           </label>
         </div>
-
-        <div className="toolbar-section">
-          <label>
-            <input
-              type="checkbox"
-              checked={showDebug}
-              onChange={(e) => setShowDebug(e.target.checked)}
-            />
-            Debug
-          </label>
-        </div>
-      </header>
+      )}
 
       <Toaster />
       <footer className="status-bar">

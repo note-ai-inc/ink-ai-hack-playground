@@ -102,7 +102,7 @@ export class RecognitionService {
     } else if (import.meta.env.DEV) {
       this.baseUrl = '/api/recognition';
     } else {
-      this.baseUrl = import.meta.env.VITE_RECOGNITION_API_URL || 'http://localhost:8080';
+      this.baseUrl = import.meta.env.INK_RECOGNITION_API_URL || 'http://localhost:8080';
     }
   }
 

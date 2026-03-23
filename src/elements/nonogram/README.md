@@ -23,7 +23,7 @@ To generate images from the recognized word using Gemini:
 1. Get an API key from [Google AI Studio](https://aistudio.google.com/apikey) (requires a paid plan for image generation)
 2. Create `.env.local` in the project root:
    ```
-   VITE_GEMINI_API_KEY=your-key-here
+   INK_GEMINI_API_KEY=your-key-here
    ```
 3. Restart the dev server
 

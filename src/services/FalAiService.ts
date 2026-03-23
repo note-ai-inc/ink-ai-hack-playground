@@ -4,7 +4,7 @@
  * Real implementation calls flux-2/klein/4b/edit endpoint with one or more images + prompt.
  * Fake implementation returns sample images for local development.
  *
- * WARNING: The API key (VITE_FAL_AI_API_KEY) is embedded into the client
+ * WARNING: The API key (INK_FAL_AI_API_KEY) is embedded into the client
  * bundle at build time and visible in browser DevTools. Only use a scoped,
  * low-privilege, rate-limited key. For production, route calls through a
  * backend proxy that holds the secret server-side.
@@ -137,7 +137,7 @@ let instance: FalAiServiceInterface | null = null;
 
 export function getFalAiService(): FalAiServiceInterface {
   if (!instance) {
-    const apiKey = import.meta.env.VITE_FAL_AI_API_KEY as string | undefined;
+    const apiKey = import.meta.env.INK_FAL_AI_API_KEY as string | undefined;
     if (apiKey) {
       instance = new FalAiService(apiKey);
     } else {

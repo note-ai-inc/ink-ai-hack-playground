@@ -43,6 +43,7 @@ export interface InkCanvasProps {
   onStrokeComplete?: (stroke: Stroke) => void;
   onDrawingStart?: () => void;
   onElementsChange?: (elements: Element[]) => void;
+  initialViewport?: Viewport;
   onViewportChange?: (viewport: Viewport) => void;
   // Animation props: Map of element ID -> animation start time
   animatingElements?: Map<string, number>;
@@ -74,6 +75,7 @@ export function InkCanvas({
   onStrokeComplete,
   onDrawingStart,
   onElementsChange,
+  initialViewport,
   onViewportChange,
   animatingElements,
   animationDuration = 500,
@@ -92,7 +94,7 @@ export function InkCanvas({
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const overlayCanvasRef = useRef<HTMLCanvasElement>(null);
-  const [viewport, setViewport] = useState<Viewport>(DEFAULT_VIEWPORT);
+  const [viewport, setViewport] = useState<Viewport>(initialViewport ?? DEFAULT_VIEWPORT);
   const [canvasSize, setCanvasSize] = useState({ width: 800, height: 600 });
 
   // Panning state
@@ -399,7 +401,7 @@ export function InkCanvas({
     if (hasActiveAnimations || hasGenerating || hasActiveImageTransitions() || hasActiveTicTacToeAnimations()) {
       animationFrameRef.current = requestAnimationFrame(render);
     }
-  }, [noteElements, viewport, showDebugOverlay, animatingElements, animationDuration, getSizeMultiplier, onAnimationComplete, selectedElementIds]);
+  }, [noteElements, viewport, canvasSize, showDebugOverlay, animatingElements, animationDuration, getSizeMultiplier, onAnimationComplete, selectedElementIds]);
 
   // Render the overlay canvas (in-progress stroke and selection marquee)
   const renderOverlay = useCallback(() => {
@@ -807,39 +809,13 @@ export function InkCanvas({
         return;
       }
 
+      // Pen tool: clear any active selection and proceed to draw
       const hasSelection = selectedElementIds && selectedElementIds.size > 0;
-      const clickedElement = getElementAtPoint(canvasPoint.x, canvasPoint.y);
-
-      // If there's a selection, check if clicking on a selected element to drag it
       if (hasSelection) {
-        const clickedOnSelectedElement = clickedElement && selectedElementIds.has(clickedElement.id);
-
-        if (clickedOnSelectedElement) {
-          // Clicking on a selected element: start dragging
-          setIsDragging(true);
-          isDraggingRef.current = true;
-          dragStartCanvasPos.current = canvasPoint;
-          overlay.setPointerCapture(e.pointerId);
-          e.preventDefault();
-          return;
-        } else {
-          // Clicking outside selected elements: clear selection and draw
-          onSelectionChange?.(new Set());
-        }
+        onSelectionChange?.(new Set());
       }
 
-      // Tap on an image element: select it and start dragging
-      if (clickedElement && clickedElement.type === 'image') {
-        onSelectionChange?.(new Set([clickedElement.id]));
-        setIsDragging(true);
-        isDraggingRef.current = true;
-        dragStartCanvasPos.current = canvasPoint;
-        overlay.setPointerCapture(e.pointerId);
-        e.preventDefault();
-        return;
-      }
-
-      // Start drawing (no selection, or clicked outside selection)
+      // Start drawing
       // Cancel all safety timeouts so earlier finished strokes don't vanish while
       // the user is still actively drawing. The next pointer-up sets a fresh timeout.
       for (const [, tid] of strokeTimeoutsRef.current) {
@@ -864,14 +840,48 @@ export function InkCanvas({
       overlay.setPointerCapture(e.pointerId);
       e.preventDefault();
     } else if (currentTool === 'select' && e.button === 0) {
-      // Start marquee selection
       const canvasPoint = screenToCanvas(viewport, {
         x: e.nativeEvent.offsetX,
         y: e.nativeEvent.offsetY,
       });
-      // Clear existing selection unless Ctrl is held
+
+      // Check for element handles first
+      if (tryStartHandleDrag(canvasPoint, overlay, e.pointerId)) {
+        e.preventDefault();
+        return;
+      }
+
+      const hasSelection = selectedElementIds && selectedElementIds.size > 0;
+      const clickedElement = getElementAtPoint(canvasPoint.x, canvasPoint.y);
+
+      // If clicking on a selected element, start dragging it
+      if (hasSelection && clickedElement && selectedElementIds.has(clickedElement.id)) {
+        setIsDragging(true);
+        isDraggingRef.current = true;
+        dragStartCanvasPos.current = canvasPoint;
+        overlay.setPointerCapture(e.pointerId);
+        e.preventDefault();
+        return;
+      }
+
+      // If clicking on an unselected element, select it and start dragging
+      if (clickedElement) {
+        const isCtrlPressed = e.ctrlKey || e.metaKey;
+        const newSelection = isCtrlPressed && hasSelection
+          ? new Set([...selectedElementIds!, clickedElement.id])
+          : new Set([clickedElement.id]);
+        onSelectionChange?.(newSelection);
+        setIsDragging(true);
+        isDraggingRef.current = true;
+        dragStartCanvasPos.current = canvasPoint;
+        overlay.setPointerCapture(e.pointerId);
+        e.preventDefault();
+        return;
+      }
+
+      // Clicking on empty space: start marquee selection
       const isCtrlPressed = e.ctrlKey || e.metaKey;
-      if (!isCtrlPressed && selectedElementIds && selectedElementIds.size > 0) {
+      if (!isCtrlPressed && hasSelection) {
         onSelectionChange?.(new Set());
       }
       setIsSelectingMarquee(true);
@@ -1202,33 +1212,37 @@ export function InkCanvas({
     }
   }, [isPanning, isHandleDragging, activeHandle, isDragging, isDrawing, isErasing, isSelectingMarquee, onStrokeComplete, renderOverlay, noteElements.elements, onElementsChange, getElementsInRect, getAllElementsAtPoint, selectedElementIds, onSelectionChange, viewport]);
 
-  // Handle double-click to fit content
+  // Handle double-click to fit content (only in select/pan modes to avoid
+  // accidental zoom during gameplay or rapid inking)
   const handleDoubleClick = useCallback(() => {
+    if (currentTool !== 'select' && currentTool !== 'pan') return;
     const bounds = getAllContentBounds(noteElements.elements);
     if (bounds) {
       const newViewport = fitToContent(viewport, bounds, canvasSize.width, canvasSize.height);
       setViewport(newViewport);
       onViewportChange?.(newViewport);
     }
-  }, [noteElements.elements, viewport, canvasSize.width, canvasSize.height, onViewportChange]);
+  }, [currentTool, noteElements.elements, viewport, canvasSize.width, canvasSize.height, onViewportChange]);
 
   // Prevent context menu on right-click (we use it for panning)
   const handleContextMenu = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
   }, []);
 
-  // Fit to content on initial load only
+  // Fit to content on initial load only (once canvas is sized), skip if viewport was restored
   useEffect(() => {
     if (hasInitialFit.current) return;
+    if (canvasSize.width <= 0 || canvasSize.height <= 0) return;
 
+    hasInitialFit.current = true;
+    if (initialViewport) return; // Restored viewport takes precedence
     const bounds = getAllContentBounds(noteElements.elements);
-    if (bounds && canvasSize.width > 0 && canvasSize.height > 0) {
+    if (bounds) {
       const newViewport = fitToContent(DEFAULT_VIEWPORT, bounds, canvasSize.width, canvasSize.height);
       setViewport(newViewport);
       onViewportChange?.(newViewport);
-      hasInitialFit.current = true;
     }
-  }, [noteElements.elements.length, canvasSize.width, canvasSize.height]);
+  }, [canvasSize.width, canvasSize.height]);
 
   // Determine cursor based on state
   const getCursor = () => {

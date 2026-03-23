@@ -23,7 +23,7 @@ cp .env.example .env
 Required variables:
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `VITE_RECOGNITION_API_URL` | Handwriting recognition API endpoint | `https://groupstrokes.dev.ink.ai` |
+| `INK_RECOGNITION_API_URL` | Handwriting recognition API endpoint | `https://groupstrokes.dev.ink.ai` |
 
 The default value in `.env.example` points to the dev recognition API and works out of the box.
 

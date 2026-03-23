@@ -10,7 +10,7 @@ import {
 import { getStrokeBoundingBox } from '../../types/brush';
 import type { CreationContext, CreationResult } from '../registry/ElementPlugin';
 import type { HandwritingRecognitionResult } from '../../recognition/RecognitionService';
-import { getRecognitionService } from '../../recognition/RecognitionService';
+import { chatCompletionJSON, isOpenRouterConfigured } from '../../ai/OpenRouterService';
 import { debugLog } from '../../debug/DebugLogger';
 import type { Line } from '../../geometry/lineIntersection';
 import { lineSegmentIntersection, lineAngle } from '../../geometry/lineIntersection';
@@ -240,25 +240,69 @@ function tryAllPairings(strokeLines: StrokeLine[]): [Offset, Offset, Offset, Off
   return null;
 }
 
-/**
- * Attempt to recognize the strokes using the recognition service.
- */
-async function tryRecognition(strokes: Stroke[]): Promise<HandwritingRecognitionResult | null> {
-  try {
-    const service = getRecognitionService();
-    return await service.recognizeGoogle(strokes);
-  } catch {
-    // Recognition not available - continue without it
-    return null;
-  }
+interface HashRecognitionResult {
+  isHash: boolean;
+  confidence: number;
+  reasoning: string;
 }
 
 /**
- * Check if recognition result indicates a "#" symbol.
+ * Convert strokes to a compact polyline representation for the LLM.
+ * Downsamples to at most ~20 points per stroke to keep the payload small.
  */
-function isHashSymbol(result: HandwritingRecognitionResult): boolean {
-  const text = result.rawText.trim().toLowerCase();
-  return text === '#' || text === '＃'; // Include full-width hash
+function strokesToPolylines(strokes: Stroke[]): number[][][] {
+  return strokes.map((stroke) => {
+    const inputs = stroke.inputs.inputs;
+    // Only need ~6 points per stroke — enough to convey line direction
+    const step = Math.max(1, Math.floor(inputs.length / 6));
+    const points: number[][] = [];
+    for (let i = 0; i < inputs.length; i += step) {
+      points.push([Math.round(inputs[i].x), Math.round(inputs[i].y)]);
+    }
+    // Always include the last point
+    const last = inputs[inputs.length - 1];
+    const lastPoint = [Math.round(last.x), Math.round(last.y)];
+    if (points.length === 0 || points[points.length - 1][0] !== lastPoint[0] || points[points.length - 1][1] !== lastPoint[1]) {
+      points.push(lastPoint);
+    }
+    return points;
+  });
+}
+
+/**
+ * Use an LLM via OpenRouter to determine if strokes form a "#" / tic-tac-toe grid.
+ */
+async function tryLLMRecognition(strokes: Stroke[]): Promise<HashRecognitionResult | null> {
+  if (!isOpenRouterConfigured()) {
+    debugLog.info('TicTacToe: OpenRouter not configured, skipping LLM recognition');
+    return null;
+  }
+
+  try {
+    const polylines = strokesToPolylines(strokes);
+    const result = await chatCompletionJSON<HashRecognitionResult>(
+      [
+        {
+          role: 'system',
+          content:
+            'Do these pen strokes form a "#" (tic-tac-toe grid)? ' +
+            'Strokes are polylines of [x,y]. ' +
+            'Reply JSON: {"isHash":bool,"confidence":0-1,"reasoning":"…"}',
+        },
+        {
+          role: 'user',
+          content: JSON.stringify(polylines),
+        },
+      ],
+      { model: 'google/gemini-2.0-flash-lite-001', temperature: 0, maxTokens: 80 },
+    );
+
+    debugLog.info('TicTacToe: LLM recognition result', result);
+    return result;
+  } catch (error) {
+    debugLog.warn('TicTacToe: LLM recognition failed', error);
+    return null;
+  }
 }
 
 /**
@@ -285,7 +329,7 @@ export function canCreate(strokes: Stroke[]): boolean {
 export async function createFromInk(
   strokes: Stroke[],
   _context: CreationContext,
-  recognitionResult?: HandwritingRecognitionResult
+  _recognitionResult?: HandwritingRecognitionResult
 ): Promise<CreationResult | null> {
   debugLog.info('TicTacToe createFromInk', { strokeCount: strokes.length });
 
@@ -319,11 +363,11 @@ export async function createFromInk(
 
   // Must have exactly 2 horizontal and 2 vertical lines
   if (horizontalLines.length !== 2 || verticalLines.length !== 2) {
-    // Could be slightly angled - try recognition to confirm "#"
-    debugLog.info('TicTacToe: not 2+2 lines, trying recognition');
-    const result = recognitionResult || await tryRecognition(strokes);
-    if (!result || !isHashSymbol(result)) {
-      debugLog.warn('TicTacToe: recognition did not confirm hash', { rawText: result?.rawText });
+    // Could be slightly angled - try LLM recognition to confirm "#"
+    debugLog.info('TicTacToe: not 2+2 lines, trying LLM recognition');
+    const llmResult = await tryLLMRecognition(strokes);
+    if (!llmResult || !llmResult.isHash || llmResult.confidence < 0.7) {
+      debugLog.warn('TicTacToe: LLM recognition did not confirm hash', { llmResult });
       return null;
     }
   }
@@ -349,19 +393,17 @@ export async function createFromInk(
 
   debugLog.info('TicTacToe: found intersections');
 
-  // Recognition is optional - geometric detection is sufficient
-  // We only use recognition as a hint, not a hard requirement
+  // LLM recognition is optional - geometric detection is sufficient
+  // We use it as a confidence hint, not a hard requirement
   let confidence = 0.9;
-  if (!recognitionResult) {
-    const result = await tryRecognition(strokes);
-    if (result && isHashSymbol(result)) {
-      // Recognition confirms "#" - boost confidence
+  const llmResult = await tryLLMRecognition(strokes);
+  if (llmResult) {
+    if (llmResult.isHash && llmResult.confidence >= 0.7) {
       confidence = 0.95;
-      debugLog.info('TicTacToe: recognition confirmed hash');
-    } else if (result && result.rawText.trim()) {
-      // Recognition returned something else - slightly lower confidence but don't reject
+      debugLog.info('TicTacToe: LLM confirmed hash', { reasoning: llmResult.reasoning });
+    } else if (!llmResult.isHash) {
       confidence = 0.8;
-      debugLog.info('TicTacToe: recognition returned non-hash, proceeding with geometric detection', { rawText: result?.rawText });
+      debugLog.info('TicTacToe: LLM did not confirm hash, proceeding with geometric detection', { reasoning: llmResult.reasoning });
     }
   }
 
