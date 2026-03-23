@@ -95,7 +95,7 @@ export function render(
         drawX(ctx, cx, cy, Math.min(cw, ch) * 0.28);
       } else if (state === 'queen') {
         const isConflict = conflictSet.has(idx);
-        drawQueen(ctx, cx, cy, Math.min(cw, ch) * 0.48, isConflict);
+        drawQueen(ctx, cx, cy, Math.min(cw, ch) * 0.30, isConflict);
       }
     }
   }
