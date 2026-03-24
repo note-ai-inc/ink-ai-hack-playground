@@ -13,7 +13,8 @@ const PIECE_OUTLINE_COLOR = '#555555';
 const PIECE_OUTLINE_WIDTH = 1.5;
 const PLACED_GLOW = 'rgba(0, 180, 0, 0.3)';
 
-// Image cache: stores both the element and the load promise to avoid races
+// Image cache with LRU eviction (max 10 entries)
+const MAX_IMAGE_CACHE = 10;
 const imageCache = new Map<string, HTMLImageElement>();
 const loadPromises = new Map<string, Promise<void>>();
 
@@ -24,6 +25,11 @@ export function preloadJigsawImage(dataUrl: string): Promise<void> {
   const pending = loadPromises.get(dataUrl);
   if (pending) return pending;
   const img = new Image();
+  // Evict oldest entry if cache is full
+  if (imageCache.size >= MAX_IMAGE_CACHE) {
+    const oldest = imageCache.keys().next().value!;
+    imageCache.delete(oldest);
+  }
   imageCache.set(dataUrl, img);
   const promise = new Promise<void>((resolve, reject) => {
     img.onload = () => { loadPromises.delete(dataUrl); resolve(); };
@@ -189,8 +195,9 @@ function drawPlayingState(
   const unplaced = gameState.pieces.filter(p => !p.isPlaced);
 
   // Render dragged piece last (on top)
-  const dragged = unplaced.filter(p => p.id === currentDragPieceId);
-  const notDragged = unplaced.filter(p => p.id !== currentDragPieceId);
+  const activeDragPieceId = dragPieceIds.get(element.id) ?? null;
+  const dragged = unplaced.filter(p => p.id === activeDragPieceId);
+  const notDragged = unplaced.filter(p => p.id !== activeDragPieceId);
 
   for (const piece of placed) {
     drawPiece(ctx, piece, gameState, img, true);
@@ -316,10 +323,14 @@ function drawJigsawEdge(
   ctx.lineTo(ex, ey);
 }
 
-// Module-level drag state (used by renderer for z-ordering)
-let currentDragPieceId: number | null = null;
-export function setDragPieceId(id: number | null): void {
-  currentDragPieceId = id;
+// Drag state per element (used by renderer for z-ordering)
+const dragPieceIds = new Map<string, number>();
+export function setDragPieceId(elementId: string, pieceId: number | null): void {
+  if (pieceId === null) {
+    dragPieceIds.delete(elementId);
+  } else {
+    dragPieceIds.set(elementId, pieceId);
+  }
 }
 
 export function getBounds(element: JigsawElement): BoundingBox | null {

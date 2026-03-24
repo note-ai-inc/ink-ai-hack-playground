@@ -78,7 +78,7 @@ const jigsawPlugin: ElementPlugin<JigsawElement> = {
         offsetX: localX - piece.currentX,
         offsetY: localY - piece.currentY,
       });
-      setDragPieceId(pieceId);
+      setDragPieceId(element.id, pieceId);
       return element;
     }
 
@@ -98,7 +98,7 @@ const jigsawPlugin: ElementPlugin<JigsawElement> = {
     }
 
     if (phase === 'end') {
-      setDragPieceId(null);
+      setDragPieceId(element.id, null);
       dragState.delete(element.id);
 
       const updatedPiece = { ...piece };

@@ -72,6 +72,7 @@ export function useJigsawGeneration(
       if (!currentEl) return;
 
       await preloadJigsawImage(imageDataUrl);
+      if (controller.signal.aborted) return;
 
       const gameState = createGameState(
         JIGSAW_ROWS,
