@@ -74,6 +74,12 @@ export function useJigsawGeneration(
       await preloadJigsawImage(imageDataUrl);
       if (controller.signal.aborted) return;
 
+      // Re-fetch element to get current dimensions (may have changed during async)
+      const freshEl = latestNoteRef.current.elements.find(
+        (el): el is JigsawElement => el.type === 'jigsaw' && el.id === elementId
+      );
+      if (!freshEl || !freshEl.isGenerating) return;
+
       const gameState = createGameState(
         JIGSAW_ROWS,
         JIGSAW_COLS,
@@ -81,8 +87,8 @@ export function useJigsawGeneration(
         PUZZLE_SIZE,
         PUZZLE_LEFT,
         PUZZLE_TOP,
-        element.width,
-        element.height,
+        freshEl.width,
+        freshEl.height,
       );
 
       updateElement(elementId, el => ({

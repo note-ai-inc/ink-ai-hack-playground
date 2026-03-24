@@ -29,6 +29,7 @@ export function preloadJigsawImage(dataUrl: string): Promise<void> {
   if (imageCache.size >= MAX_IMAGE_CACHE) {
     const oldest = imageCache.keys().next().value!;
     imageCache.delete(oldest);
+    loadPromises.delete(oldest);
   }
   imageCache.set(dataUrl, img);
   const promise = new Promise<void>((resolve, reject) => {
