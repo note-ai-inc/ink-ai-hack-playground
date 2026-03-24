@@ -56,7 +56,7 @@ npm run preview  # Preview production build
 
 ## Configuration
 
-**Environment**: `INK_RECOGNITION_API_URL=https://groupstrokes.dev.ink.ai`
+**Environment**: `INK_RECOGNITION_API_URL=https://strokes.hack.ink.ai`
 
 **TypeScript**: Strict mode, ES2022 target, react-jsx
 

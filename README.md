@@ -23,9 +23,9 @@ cp .env.example .env
 Required variables:
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `INK_RECOGNITION_API_URL` | Handwriting recognition API endpoint | `https://groupstrokes.dev.ink.ai` |
+| `INK_RECOGNITION_API_URL` | Handwriting recognition API endpoint | `https://strokes.hack.ink.ai` |
 
-The default value in `.env.example` points to the dev recognition API and works out of the box.
+The default value in `.env.example` points to the hack recognition API and works out of the box.
 
 ### Running
 ```bash
