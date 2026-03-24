@@ -122,8 +122,8 @@ export function cycleCell(state: TangoGameState, index: number): TangoGameState 
 
   const current = state.grid[index];
   let next: TangoSymbol;
-  if (current === null) next = 'circle';
-  else if (current === 'circle') next = 'cross';
+  if (current === null) next = 'cross';
+  else if (current === 'cross') next = 'circle';
   else next = null;
 
   const newGrid = [...state.grid];

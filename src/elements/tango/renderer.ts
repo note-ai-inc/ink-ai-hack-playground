@@ -16,8 +16,11 @@ const GRID_BORDER_WIDTH = 2.5;
 const CONFLICT_FILL = 'rgba(255, 0, 0, 0.15)';
 const SOLVED_FILL = 'rgba(0, 180, 0, 0.10)';
 
-const CIRCLE_COLOR = '#2563eb';      // blue
-const CROSS_COLOR = '#dc2626';       // red
+const SUN_FILL = '#FFB300';
+const SUN_STROKE = '#F57F17';
+const SUN_RAY_COLOR = '#FFA000';
+const MOON_FILL = '#5C6BC0';
+const MOON_STROKE = '#303F9F';
 const SYMBOL_LINE_WIDTH = 2.5;
 
 const CONSTRAINT_EQUAL_COLOR = '#666666';
@@ -180,22 +183,61 @@ function drawSymbols(
       const halfSize = (cellSize - padding * 2) / 2;
 
       if (sym === 'circle') {
-        ctx.strokeStyle = CIRCLE_COLOR;
+        // Full moon with craters
+        const r = halfSize * 0.8;
+
+        // Base moon with gradient
+        const grad = ctx.createRadialGradient(cx - r * 0.3, cy - r * 0.3, r * 0.1, cx, cy, r);
+        grad.addColorStop(0, '#F5F5F0');   // bright silvery highlight
+        grad.addColorStop(0.5, '#E0DDD5'); // pale grey
+        grad.addColorStop(1, '#C8C4B8');   // warm grey edge
+
+        ctx.fillStyle = grad;
+        ctx.strokeStyle = '#A8A498';
         ctx.lineWidth = SYMBOL_LINE_WIDTH;
         ctx.beginPath();
-        ctx.arc(cx, cy, halfSize, 0, Math.PI * 2);
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.fill();
         ctx.stroke();
+
+        // Craters
+        ctx.fillStyle = 'rgba(160, 155, 140, 0.4)';
+        ctx.beginPath();
+        ctx.arc(cx - r * 0.25, cy - r * 0.15, r * 0.18, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(cx + r * 0.3, cy + r * 0.25, r * 0.14, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(cx + r * 0.05, cy + r * 0.45, r * 0.1, 0, Math.PI * 2);
+        ctx.fill();
       } else {
-        // Cross (×)
-        ctx.strokeStyle = CROSS_COLOR;
+        // Sun (circle with rays)
+        const coreRadius = halfSize * 0.5;
+        const rayInner = halfSize * 0.6;
+        const rayOuter = halfSize * 0.95;
+        const rayCount = 8;
+
+        ctx.fillStyle = SUN_FILL;
+        ctx.strokeStyle = SUN_STROKE;
         ctx.lineWidth = SYMBOL_LINE_WIDTH;
-        ctx.lineCap = 'round';
         ctx.beginPath();
-        ctx.moveTo(cx - halfSize, cy - halfSize);
-        ctx.lineTo(cx + halfSize, cy + halfSize);
-        ctx.moveTo(cx + halfSize, cy - halfSize);
-        ctx.lineTo(cx - halfSize, cy + halfSize);
+        ctx.arc(cx, cy, coreRadius, 0, Math.PI * 2);
+        ctx.fill();
         ctx.stroke();
+
+        ctx.strokeStyle = SUN_RAY_COLOR;
+        ctx.lineWidth = 2;
+        ctx.lineCap = 'round';
+        for (let i = 0; i < rayCount; i++) {
+          const angle = (Math.PI * 2 * i) / rayCount;
+          const cosA = Math.cos(angle);
+          const sinA = Math.sin(angle);
+          ctx.beginPath();
+          ctx.moveTo(cx + rayInner * cosA, cy + rayInner * sinA);
+          ctx.lineTo(cx + rayOuter * cosA, cy + rayOuter * sinA);
+          ctx.stroke();
+        }
         ctx.lineCap = 'butt';
       }
     }
