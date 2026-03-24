@@ -32,6 +32,10 @@ const categoryLabels: Record<string, string> = Object.fromEntries(
 );
 
 export function computePaletteGridLayout(entries: PaletteEntry[]): PaletteGridLayout {
+  if (entries.length === 0) {
+    return { gridTemplateColumns: 'auto', groupSpans: [], entryColumns: [], separators: [], dismissColumn: 1 };
+  }
+
   // Build column types array: alternating 'button' and separator columns
   const colTypes: ('button' | 'sep' | 'group-sep')[] = [];
   const entryColumns: number[] = [];

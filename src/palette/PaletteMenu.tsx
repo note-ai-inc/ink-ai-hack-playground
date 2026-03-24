@@ -60,9 +60,10 @@ export function PaletteMenu({
     onAction('dismiss');
   }, [onAction]);
 
+  const entries = intent?.entries;
   const layout = useMemo(
-    () => intent ? computePaletteGridLayout(intent.entries) : null,
-    [intent],
+    () => entries ? computePaletteGridLayout(entries) : null,
+    [entries],
   );
 
   if (!intent || !layout || intent.entries.length === 0) {
