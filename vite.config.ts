@@ -8,7 +8,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api/recognition': {
-        target: 'https://groupstrokes.dev.ink.ai',
+        target: 'https://strokes.hack.ink.ai',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api\/recognition/, ''),
       },
