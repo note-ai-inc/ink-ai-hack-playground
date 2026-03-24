@@ -32,15 +32,19 @@ export function registerPaletteEntry(entry: PaletteEntry): void {
   }
 }
 
-const CATEGORY_ORDER: Record<PaletteEntry['category'], number> = {
-  image: 0,
-  content: 1,
-  game: 2,
-};
+export const PALETTE_CATEGORIES: { key: PaletteEntry['category']; label: string; order: number }[] = [
+  { key: 'image', label: 'Image', order: 0 },
+  { key: 'content', label: 'AI', order: 1 },
+  { key: 'game', label: 'Games', order: 2 },
+];
+
+const CATEGORY_ORDER: Record<string, number> = Object.fromEntries(
+  PALETTE_CATEGORIES.map(c => [c.key, c.order])
+);
 
 export function getPaletteEntries(): PaletteEntry[] {
   return [...paletteEntries].sort((a, b) => {
-    const catDiff = CATEGORY_ORDER[a.category] - CATEGORY_ORDER[b.category];
+    const catDiff = (CATEGORY_ORDER[a.category] ?? 99) - (CATEGORY_ORDER[b.category] ?? 99);
     if (catDiff !== 0) return catDiff;
     return a.label.localeCompare(b.label);
   });
