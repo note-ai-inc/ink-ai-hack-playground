@@ -9,6 +9,7 @@ import './coordinateplane';
 import './glyph';
 import './image';
 import './inktext';
+import './jigsaw';
 import './minesweeper';
 import './nonogram';
 import './queens';

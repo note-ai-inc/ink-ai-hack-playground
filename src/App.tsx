@@ -27,6 +27,7 @@ import type { SelectionIntent } from './lasso';
 import { useSketchableImageGeneration } from './hooks/useSketchableImageGeneration';
 import type { RefinementMode } from './hooks/useSketchableImageGeneration';
 import { useNonogramGeneration } from './hooks/useNonogramGeneration';
+import { useJigsawGeneration } from './hooks/useJigsawGeneration';
 import { STYLE_PRESETS, DEFAULT_STYLE_PRESET } from './services/stylePresets';
 import type { StylePresetKey } from './services/stylePresets';
 import { detectRectangleX, lastRectXRejection, type RectangleXResult } from './geometry/rectangleXDetection';
@@ -95,6 +96,7 @@ function App() {
 
   useSketchableImageGeneration(currentNote, setCurrentNote, stylePreset, refinementMode);
   useNonogramGeneration(currentNote, setCurrentNote);
+  useJigsawGeneration(currentNote, setCurrentNote);
 
   // Ref to always access the latest note state from async callbacks (avoids stale closures)
   const currentNoteRef = useRef(currentNote);
