@@ -13,22 +13,25 @@ const PIECE_OUTLINE_COLOR = '#555555';
 const PIECE_OUTLINE_WIDTH = 1.5;
 const PLACED_GLOW = 'rgba(0, 180, 0, 0.3)';
 
-// Image cache
+// Image cache: stores both the element and the load promise to avoid races
 const imageCache = new Map<string, HTMLImageElement>();
+const loadPromises = new Map<string, Promise<void>>();
 
 export function preloadJigsawImage(dataUrl: string): Promise<void> {
   if (!dataUrl) return Promise.resolve();
   const existing = imageCache.get(dataUrl);
   if (existing?.complete) return Promise.resolve();
-  return new Promise((resolve, reject) => {
-    const img = existing ?? new Image();
-    img.onload = () => resolve();
-    img.onerror = () => reject(new Error('Failed to preload jigsaw image'));
-    if (!existing) {
-      imageCache.set(dataUrl, img);
-      img.src = dataUrl;
-    }
+  const pending = loadPromises.get(dataUrl);
+  if (pending) return pending;
+  const img = new Image();
+  imageCache.set(dataUrl, img);
+  const promise = new Promise<void>((resolve, reject) => {
+    img.onload = () => { loadPromises.delete(dataUrl); resolve(); };
+    img.onerror = () => { loadPromises.delete(dataUrl); imageCache.delete(dataUrl); reject(new Error('Failed to preload jigsaw image')); };
+    img.src = dataUrl;
   });
+  loadPromises.set(dataUrl, promise);
+  return promise;
 }
 
 function getImage(dataUrl: string): HTMLImageElement | null {
@@ -52,8 +55,10 @@ export function render(
   ctx.fillStyle = 'rgba(240, 238, 230, 0.4)';
   ctx.fillRect(0, 0, element.width, element.height);
 
-  if (element.isGenerating || !element.gameState) {
+  if (element.isGenerating) {
     drawLoadingState(ctx, element);
+  } else if (!element.gameState) {
+    drawErrorState(ctx, element);
   } else if (element.isSolved) {
     drawSolvedState(ctx, element, element.gameState);
   } else {
@@ -92,6 +97,21 @@ function drawLoadingState(ctx: CanvasRenderingContext2D, element: JigsawElement)
     ctx.font = '12px sans-serif';
     ctx.fillText(`"${element.prompt}"`, cx, cy + 30);
   }
+}
+
+function drawErrorState(ctx: CanvasRenderingContext2D, element: JigsawElement): void {
+  const cx = element.width / 2;
+  const cy = element.height / 2;
+
+  ctx.fillStyle = '#cc0000';
+  ctx.font = 'bold 16px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('Generation failed', cx, cy);
+
+  ctx.fillStyle = '#999';
+  ctx.font = '12px sans-serif';
+  ctx.fillText('Delete and try again', cx, cy + 24);
 }
 
 function drawSolvedState(

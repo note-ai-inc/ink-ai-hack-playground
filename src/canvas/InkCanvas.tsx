@@ -396,7 +396,7 @@ export function InkCanvas({
     // Continue animation loop if there are active animations, generating elements, or image transitions
     const hasActiveAnimations = animatingElements && animatingElements.size > completedAnimations.length;
     const hasGenerating = noteElements.elements.some(
-      el => (el.type === 'sketchableImage' || el.type === 'nonogram' || el.type === 'jigsaw') && el.isGenerating
+      el => 'isGenerating' in el && (el as Record<string, unknown>).isGenerating === true
     );
     if (hasActiveAnimations || hasGenerating || hasActiveImageTransitions() || hasActiveTicTacToeAnimations()) {
       animationFrameRef.current = requestAnimationFrame(render);
@@ -522,7 +522,7 @@ export function InkCanvas({
 
   // Start animation loop when animating elements change or elements are generating
   const hasGeneratingElements = noteElements.elements.some(
-    el => (el.type === 'sketchableImage' || el.type === 'nonogram' || el.type === 'jigsaw') && el.isGenerating
+    el => 'isGenerating' in el && (el as Record<string, unknown>).isGenerating === true
   );
   useEffect(() => {
     const shouldAnimate = (animatingElements && animatingElements.size > 0) || hasGeneratingElements;

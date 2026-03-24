@@ -10,12 +10,7 @@ import type { JigsawElement } from '../elements/jigsaw/types';
 import { getGeminiImageService, generateFallbackImage } from '../services/GeminiImageService';
 import { createGameState } from '../elements/jigsaw/gameState';
 import { preloadJigsawImage } from '../elements/jigsaw/renderer';
-
-const JIGSAW_ROWS = 4;
-const JIGSAW_COLS = 4;
-const PUZZLE_SIZE = 400;
-const PUZZLE_LEFT = 30;
-const PUZZLE_TOP = 50;
+import { JIGSAW_ROWS, JIGSAW_COLS, PUZZLE_SIZE, PUZZLE_LEFT, PUZZLE_TOP } from '../elements/jigsaw/constants';
 
 export function useJigsawGeneration(
   currentNote: NoteElements,

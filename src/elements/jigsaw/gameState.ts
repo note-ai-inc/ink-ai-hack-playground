@@ -71,12 +71,12 @@ function scatterPieces(
   elementHeight: number,
 ): void {
   const margin = 20;
-  const maxX = elementWidth - pieceWidth - margin;
-  const maxY = elementHeight - pieceHeight - margin;
+  const rangeX = Math.max(0, elementWidth - pieceWidth - margin * 2);
+  const rangeY = Math.max(0, elementHeight - pieceHeight - margin * 2);
 
   for (const piece of pieces) {
-    piece.currentX = margin + Math.random() * (maxX - margin);
-    piece.currentY = margin + Math.random() * (maxY - margin);
+    piece.currentX = margin + Math.random() * rangeX;
+    piece.currentY = margin + Math.random() * rangeY;
   }
 }
 

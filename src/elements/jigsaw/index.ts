@@ -13,18 +13,12 @@ import { checkSnap, getTargetPosition, checkAllPlaced } from './gameState';
 import type { Element } from '../../types/elements';
 import { getElementBounds } from '../registry/ElementRegistry';
 
-const CANVAS_GRID = 50;
-const JIGSAW_ROWS = 4;
-const JIGSAW_COLS = 4;
-const PUZZLE_SIZE = 400;  // 400x400 puzzle area
-const ELEMENT_WIDTH = 900;
-const ELEMENT_HEIGHT = 500;
-const PUZZLE_LEFT = 30;
-const PUZZLE_TOP = 50;
+import { JIGSAW_ROWS, JIGSAW_COLS, PUZZLE_SIZE, ELEMENT_WIDTH, ELEMENT_HEIGHT, PUZZLE_LEFT, PUZZLE_TOP } from './constants';
 
-// Drag state
-let dragOffsetX = 0;
-let dragOffsetY = 0;
+const ORIGIN_SNAP_GRID = 50;
+
+// Drag state keyed by element ID (supports multiple jigsaw elements)
+const dragState = new Map<string, { offsetX: number; offsetY: number }>();
 
 const jigsawPlugin: ElementPlugin<JigsawElement> = {
   elementType: 'jigsaw',
@@ -80,15 +74,19 @@ const jigsawPlugin: ElementPlugin<JigsawElement> = {
     const { pieceWidth, pieceHeight } = element.gameState;
 
     if (phase === 'start') {
-      dragOffsetX = localX - piece.currentX;
-      dragOffsetY = localY - piece.currentY;
+      dragState.set(element.id, {
+        offsetX: localX - piece.currentX,
+        offsetY: localY - piece.currentY,
+      });
       setDragPieceId(pieceId);
       return element;
     }
 
     if (phase === 'update') {
-      const newX = localX - dragOffsetX;
-      const newY = localY - dragOffsetY;
+      const drag = dragState.get(element.id);
+      if (!drag) return element;
+      const newX = localX - drag.offsetX;
+      const newY = localY - drag.offsetY;
 
       const newPieces = [...element.gameState.pieces];
       newPieces[pieceIdx] = { ...piece, currentX: newX, currentY: newY };
@@ -101,6 +99,7 @@ const jigsawPlugin: ElementPlugin<JigsawElement> = {
 
     if (phase === 'end') {
       setDragPieceId(null);
+      dragState.delete(element.id);
 
       const updatedPiece = { ...piece };
 
@@ -139,8 +138,8 @@ registerPaletteEntry({
   Icon: JigsawIcon,
   category: 'game',
   onSelect: async (bounds, consumeStrokes, context) => {
-    const originX = Math.round(bounds.left / CANVAS_GRID) * CANVAS_GRID;
-    const originY = Math.round(bounds.top / CANVAS_GRID) * CANVAS_GRID;
+    const originX = Math.round(bounds.left / ORIGIN_SNAP_GRID) * ORIGIN_SNAP_GRID;
+    const originY = Math.round(bounds.top / ORIGIN_SNAP_GRID) * ORIGIN_SNAP_GRID;
 
     // Try to extract text from elements within bounds.
     // Word strokes may have been recognized as InkText or Glyph elements already,
@@ -192,7 +191,9 @@ registerPaletteEntry({
             } catch {
               // Fall back to default
             }
-            elementIdsToConsume.push(...strokeElements.map(el => el.id));
+            if (prompt) {
+              elementIdsToConsume.push(...strokeElements.map(el => el.id));
+            }
           }
         }
       }
