@@ -32,6 +32,16 @@ export function registerPaletteEntry(entry: PaletteEntry): void {
   }
 }
 
+const CATEGORY_ORDER: Record<PaletteEntry['category'], number> = {
+  image: 0,
+  content: 1,
+  game: 2,
+};
+
 export function getPaletteEntries(): PaletteEntry[] {
-  return [...paletteEntries];
+  return [...paletteEntries].sort((a, b) => {
+    const catDiff = CATEGORY_ORDER[a.category] - CATEGORY_ORDER[b.category];
+    if (catDiff !== 0) return catDiff;
+    return a.label.localeCompare(b.label);
+  });
 }
