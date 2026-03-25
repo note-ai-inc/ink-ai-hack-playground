@@ -5,6 +5,7 @@
 
 // Import all plugins to register them
 import './bridges';
+import './colorconnect';
 import './coordinateplane';
 import './glyph';
 import './image';

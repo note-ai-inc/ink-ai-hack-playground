@@ -18,6 +18,7 @@ import type { NonogramElement } from '../elements/nonogram/types';
 import type { TangoElement } from '../elements/tango/types';
 import type { QueensElement } from '../elements/queens/types';
 import type { JigsawElement } from '../elements/jigsaw/types';
+import type { ColorConnectElement } from '../elements/colorconnect/types';
 
 // Union type for all elements
 export type Element =
@@ -35,7 +36,8 @@ export type Element =
   | NonogramElement
   | TangoElement
   | QueensElement
-  | JigsawElement;
+  | JigsawElement
+  | ColorConnectElement;
 
 // Check if element supports background color
 export function supportsBackgroundColor(element: Element): boolean {
