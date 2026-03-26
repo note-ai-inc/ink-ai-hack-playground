@@ -38,22 +38,28 @@ style: |
     background-size: min(50%, 280px) 8px;
     padding-bottom: 12px;
   }
-  /* 2. Section divider slides */
+  /* 2. Section divider slides — Moleskine cover background */
   section.divider {
-    background: linear-gradient(135deg, #1a2744 0%, #2a3f5f 100%);
+    background-image: url('assets/moleskine.png');
+    background-size: 100% 100%;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-color: #1a2e3e;
+    display: flex;
     justify-content: center;
     text-align: center;
-    padding-top: 0;
+    padding-top: 100px;
   }
   section.divider h1 {
     font-family: 'Caveat', cursive;
-    font-size: 3.5em;
-    color: #fff;
-    text-shadow: 2px 2px 8px rgba(0,0,0,0.3);
+    font-size: 3em;
+    margin-left: 1.5em;
+    color: #1a2e3e;
+    text-shadow: 1px 1px 4px rgba(0,0,0,0.15);
   }
   section.divider footer,
   section.divider::after {
-    color: rgba(255,255,255,0.5);
+    color: rgba(255,255,255,0.4);
   }
   /* 3. Notepad-style code blocks */
   pre {
@@ -84,20 +90,31 @@ style: |
     background-position: top center;
     background-size: 100% 5px;
     padding-top: 10px !important;
+    transform: translateY(15px);
   }
 ---
 
 <style scoped>
 section {
+  background-image: url('assets/moleskine.png');
+  background-size: 125% 125%;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-color: #1a2e3e;
   padding-top: 78.5px;
   justify-content: center;
 }
 section h1, section h2 {
   position: static;
+  color: #1a2e3e;
 }
 h2 {
-  color: var(--h1-color);
+  color: #1a2e3e;
   margin-bottom: 40px;
+}
+section {
+  padding-left: 360px;
+  text-align: left;
 }
 </style>
 
