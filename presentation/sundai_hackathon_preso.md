@@ -15,8 +15,13 @@ style: |
     font-family: 'Caveat', cursive;
     font-size: 1.3em;
   }
+  /* 1. Paper background + ink-blue accent colors */
   section {
+    background: linear-gradient(170deg, #fafaf7 0%, #f0ede4 100%);
     padding-top: 100px;
+  }
+  section h1 {
+    color: #1a2744;
   }
   section h2 {
     position: absolute;
@@ -25,6 +30,60 @@ style: |
     right: 78px;
     margin: 0;
     z-index: 1;
+    color: #1a2744;
+    /* 4. Pen-stroke underline accent */
+    background-image: url('assets/underline-stroke.svg');
+    background-repeat: no-repeat;
+    background-position: bottom left;
+    background-size: min(50%, 280px) 8px;
+    padding-bottom: 12px;
+  }
+  /* 2. Section divider slides */
+  section.divider {
+    background: linear-gradient(135deg, #1a2744 0%, #2a3f5f 100%);
+    justify-content: center;
+    text-align: center;
+    padding-top: 0;
+  }
+  section.divider h1 {
+    font-family: 'Caveat', cursive;
+    font-size: 3.5em;
+    color: #fff;
+    text-shadow: 2px 2px 8px rgba(0,0,0,0.3);
+  }
+  section.divider footer,
+  section.divider::after {
+    color: rgba(255,255,255,0.5);
+  }
+  /* 3. Notepad-style code blocks */
+  pre {
+    background:
+      repeating-linear-gradient(
+        transparent 0px, transparent 1.42em,
+        #c8dce8 1.42em, #c8dce8 calc(1.42em + 1px)
+      ),
+      #fff8b0 !important;
+    border-left: 4px solid #c49898 !important;
+    border-right: none !important;
+    border-top: none !important;
+    border-bottom: none !important;
+    padding: 8px 16px 8px 28px !important;
+    border-radius: 3px !important;
+    box-shadow: 3px 3px 12px rgba(0,0,0,0.08);
+  }
+  pre code {
+    background: transparent !important;
+  }
+  /* 5. Footer with Caveat font and wavy line separator */
+  footer {
+    font-family: 'Caveat', cursive !important;
+    font-size: 1.05em !important;
+    letter-spacing: 0.02em;
+    background-image: url('assets/wavy-line.svg');
+    background-repeat: no-repeat;
+    background-position: top center;
+    background-size: 100% 5px;
+    padding-top: 10px !important;
   }
 ---
 
@@ -115,6 +174,12 @@ Everything you see here
 <div style="display: flex; justify-content: center;">
 <img src="assets/demo.jpg" style="height: 400px;">
 </div>
+
+---
+
+<!-- _class: divider -->
+
+# How It Works
 
 ---
 
@@ -376,6 +441,12 @@ Strokes become game moves. The computer responds automatically.
 
 ---
 
+<!-- _class: divider -->
+
+# Getting Started
+
+---
+
 <style scoped>
 .cols { display: flex; gap: 30px; align-items: center; position: relative; }
 .cols .left { flex: 1.33; font-size: 0.8em}
@@ -552,6 +623,12 @@ npm install && npm run dev
 
 ---
 
+<!-- _class: divider -->
+
+# What Will You Build?
+
+---
+
 <style scoped>
 .cols { display: flex; gap: 30px; align-items: center; }
 .cols .left { flex: 1.33; font-size: 0.9em }
@@ -578,7 +655,7 @@ Build on HW reco + grid/cell mechanics.
 </div>
 <div class="right">
 
-<img src="assets/color-connect.webp">
+<img src="assets/placeholder.png">
 
 </div>
 </div>
@@ -587,8 +664,8 @@ Build on HW reco + grid/cell mechanics.
 
 <style scoped>
 .cols { display: flex; gap: 30px; align-items: center; }
-.cols .left { flex: 2; font-size: 0.9em }
-.cols .right { flex: 1; display: flex; justify-content: center; }
+.cols .left { flex: 1; font-size: 0.9em }
+.cols .right { flex: 1.2; display: flex; justify-content: center; }
 .cols .right img { max-height: 500px; max-width: 100%; }
 </style>
 
@@ -597,16 +674,14 @@ Build on HW reco + grid/cell mechanics.
 <div class="cols">
 <div class="left">
 
-- **Bar / line / pie charts**
-  Sketch charts; generate clean, editable visualizations
+- **Bar / Line charts**
+  Draw axes + data points → structured chart
 - **Structured tables**
-  Draw rough table; convert into structured data
-- **Gantt timeline**
-  Draw timeline; auto-generate project plan or calendar
-- **Dynamic templates**
-  Create dashboard: journal+calendar+to-dos+meeting snippets
-- **Forms to surveys**
-  Draw form layout; generate functional fillable survey
+  Grid of cells with HWR, basic formulas
+- **Checkbox lists**
+  Draw a checkbox → tappable checklist
+- **Mind maps**
+  Connected bubbles with auto-layout
 
 </div>
 <div class="right">
@@ -620,29 +695,25 @@ Build on HW reco + grid/cell mechanics.
 
 <style scoped>
 .cols { display: flex; gap: 30px; align-items: center; }
-.cols .left { flex: 2; font-size: 0.9em }
+.cols .left { flex: 1.33; font-size: 0.9em }
 .cols .right { flex: 1; display: flex; flex-direction: column; align-items: center; }
 .cols .right img { max-height: 400px; max-width: 100%; }
 .cols .right .caption { font-size: 0.7em; margin-top: 8px; text-align: center; }
 </style>
 
-## Hackathon ideas: Academic & STEM learning
+## Hackathon ideas: STEM & learning
 
 <div class="cols">
 <div class="left">
 
-- **Chemistry molecules**
-  Reco molecular diagrams; provide structure + interpretation
-- **Circuit simulator**
-  Draw circuit diagram; simulate voltage/current behavior
-- **Math Equation/Solver**
-  Reco equations and use solver for step-by-step solutions
-- **Physics Sim**
-  Draw ramps, pulleys, pendulums; simulate motion & forces.
-- **Kinematics Playground**
-  Sketch objects; simulate motion-specific scenarios
-  like friction, acceleration, and constraints.
-
+- **Molecule diagrams**
+  Element symbols + bonds → chemistry structures
+- **Circuit diagrams**
+  Logic gates → simulate truth tables
+- **Sheet music**
+  Draw a staff → place notes → playback
+- **Code editor**
+  Write code by hand → HWR → syntax highlight → execute
 
 </div>
 <div class="right">
@@ -657,7 +728,7 @@ Build on HW reco + grid/cell mechanics.
 
 <style scoped>
 .cols { display: flex; gap: 30px; align-items: center; }
-.cols .left { flex: 2; font-size: 0.9em }
+.cols .left { flex: 1; font-size: 0.9em }
 .cols .right { flex: 1; display: flex; justify-content: center; }
 .cols .right img { max-height: 600px; max-width: 100%; }
 </style>
@@ -667,82 +738,19 @@ Build on HW reco + grid/cell mechanics.
 <div class="cols">
 <div class="left">
 
+- **Maze**
+  Algorithmically generated, trace path with stylus
+- **Nonogram / Picross**
+  Fill cells to reveal pixel art
 - **Sketch to video**
-  Draw object, record prompt; animate object accordingly
-- **Sheet music**
-  Draw staff and place notes → playback
-- **Image generation**
-  Sketch turns into refined AI-generated imagery
-- **3D model**
-  Multi-view sketch becomes rotatable 3D object
+  Draw an object → record a prompt → Animate that object accordingly
+- **Ask the Coordinator**
+  Circled "?" → LLM answers rendered as handwriting
 
 </div>
 <div class="right">
 
-<img src="assets/flag.gif">
-
-</div>
-</div>
-
----
-
-<style scoped>
-.cols { display: flex; gap: 30px; align-items: center; }
-.cols .left { flex: 1.8; font-size: 0.9em }
-.cols .right { flex: 1; display: flex; justify-content: center; }
-.cols .right img { max-height: 600px; max-width: 100%; }
-</style>
-
-## Hackathon ideas: domain-specific recognition
-
-<div class="cols">
-<div class="left">
-
-- **Flowchart**
-  Turn rough diagrams into executable logic or code flows
-- **Mind map**
-  Convert freeform nodes into structured interactive graphs
-- **Architectural rendering**
-  Plan/elevation generates full 3D environment
-- **Floor plan editing**
-  Import plan, sketch changes (walls, windows); update plan
-- **Slide deck**
-  Rough storyboard becomes polished presentation
-
-</div>
-<div class="right">
-
-<img src="assets/floorplan.png">
-
-</div>
-</div>
-
----
-
-<style scoped>
-.cols { display: flex; gap: 30px; align-items: center; }
-.cols .left { flex: 1.5; font-size: 0.9em }
-.cols .right { flex: 1; display: flex; justify-content: center; }
-.cols .right img { max-height: 600px; max-width: 100%; }
-</style>
-
-## Hackathon ideas: app & UI generation
-
-<div class="cols">
-<div class="left">
-
-- **Interactive UI prototype**
-  Hand-drawn UI interactive with sketch aesthetic
-- **App prototype**
-  UI sketch to no-code working prototype
-  Bonus: multi-platform Export
-- **UI components**
-  Reco buttons, forms, nav bars and make interactive
-
-</div>
-<div class="right">
-
-<img src="assets/handdrawn-ui.webp">
+<img src="assets/sax.gif">
 
 </div>
 </div>
