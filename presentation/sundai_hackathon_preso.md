@@ -807,21 +807,3 @@ Build on HW reco + grid/cell mechanics.
 - We'll be here all day to help
 
 **Show us something we haven't imagined yet.**
-
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-  const svgs = document.querySelectorAll('svg[data-marpit-svg]');
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        entry.target.querySelectorAll('img[src$=".gif"]').forEach(img => {
-          const src = img.src;
-          img.src = '';
-          img.src = src;
-        });
-      }
-    });
-  }, { threshold: 0.5 });
-  svgs.forEach(svg => observer.observe(svg));
-});
-</script>
