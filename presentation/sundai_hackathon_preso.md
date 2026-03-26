@@ -2,7 +2,7 @@
 marp: true
 theme: default
 paginate: true
-footer: "Ink AI — Sundai Club Hackathon — March 29, 2026"
+footer: "Ink AI — Sundai Club Hack — March 29, 2026"
 style: |
   @import url('https://fonts.googleapis.com/css2?family=Caveat:wght@600&display=swap');
   .handwritten {
@@ -491,7 +491,7 @@ Strokes become game moves. The computer responds automatically.
 **Path 2: Rectangle-with-X catalog**
 - Draw a rectangle → cross it with an X → pick from a menu
 - Just: `render()` + `acceptInk()`
-- **Easier for hackathon project**
+- **Easier for hack project**
 
 Both coexist — start with catalog, structure interpretation later.
 
@@ -653,7 +653,7 @@ npm install && npm run dev
 .cols .right img { max-height: 500px; max-width: 100%; }
 </style>
 
-## Hackathon ideas: games
+## Hack ideas: games
 
 <div class="cols">
 <div class="left">
@@ -681,12 +681,12 @@ Build on HW reco + grid/cell mechanics.
 
 <style scoped>
 .cols { display: flex; gap: 30px; align-items: center; }
-.cols .left { flex: 1; font-size: 0.9em }
-.cols .right { flex: 1.2; display: flex; justify-content: center; }
+.cols .left { flex: 2; font-size: 0.9em }
+.cols .right { flex: 1; display: flex; justify-content: center; }
 .cols .right img { max-height: 500px; max-width: 100%; }
 </style>
 
-## Hackathon ideas: data visualization & productivity
+## Hack ideas: data visualization & productivity
 
 <div class="cols">
 <div class="left">
@@ -714,13 +714,13 @@ Build on HW reco + grid/cell mechanics.
 
 <style scoped>
 .cols { display: flex; gap: 30px; align-items: center; }
-.cols .left { flex: 1.33; font-size: 0.9em }
+.cols .left { flex: 2; font-size: 0.9em }
 .cols .right { flex: 1; display: flex; flex-direction: column; align-items: center; }
 .cols .right img { max-height: 400px; max-width: 100%; }
 .cols .right .caption { font-size: 0.7em; margin-top: 8px; text-align: center; }
 </style>
 
-## Hackathon ideas: Academic & STEM learning
+## Hack ideas: Academic & STEM learning
 
 <div class="cols">
 <div class="left">
@@ -750,12 +750,12 @@ Build on HW reco + grid/cell mechanics.
 
 <style scoped>
 .cols { display: flex; gap: 30px; align-items: center; }
-.cols .left { flex: 1; font-size: 0.9em }
+.cols .left { flex: 2; font-size: 0.9em }
 .cols .right { flex: 1; display: flex; justify-content: center; }
 .cols .right img { max-height: 600px; max-width: 100%; }
 </style>
 
-## Hackathon ideas: creative & other
+## Hack ideas: creative & other
 
 <div class="cols">
 <div class="left">
@@ -786,7 +786,7 @@ Build on HW reco + grid/cell mechanics.
 .cols .right img { max-height: 600px; max-width: 100%; }
 </style>
 
-## Hackathon ideas: domain-specific recognition
+## Hack ideas: domain-specific recognition
 
 <div class="cols">
 <div class="left">
@@ -819,7 +819,7 @@ Build on HW reco + grid/cell mechanics.
 .cols .right img { max-height: 600px; max-width: 100%; }
 </style>
 
-## Hackathon ideas: app & UI generation
+## Hack ideas: app & UI generation
 
 <div class="cols">
 <div class="left">
@@ -846,7 +846,7 @@ Build on HW reco + grid/cell mechanics.
 .content { font-size: 0.9em }
 </style>
 
-## Hackathon ideas: beyond elements
+## Hack ideas: beyond elements
 
 <div class="content">
 
