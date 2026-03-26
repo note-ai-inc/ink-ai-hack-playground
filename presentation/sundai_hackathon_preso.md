@@ -655,7 +655,7 @@ Build on HW reco + grid/cell mechanics.
 </div>
 <div class="right">
 
-<img src="assets/placeholder.png">
+<img src="assets/color-connect.webp">
 
 </div>
 </div>
