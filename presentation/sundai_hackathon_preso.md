@@ -97,7 +97,7 @@ style: |
 <style scoped>
 section {
   background-image: url('assets/moleskine.png');
-  background-size: 125% 125%;
+  background-size: 100% 125%;
   background-position: center;
   background-repeat: no-repeat;
   background-color: #1a2e3e;
@@ -113,7 +113,7 @@ h2 {
   margin-bottom: 40px;
 }
 section {
-  padding-left: 360px;
+  padding-left: 460px;
   text-align: left;
 }
 </style>
