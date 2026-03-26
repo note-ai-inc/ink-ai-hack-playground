@@ -614,7 +614,7 @@ ink-ai-hack-playground/
 ```
 
 ```bash
-git clone https://github.com/anthropics/ink-ai-hack-playground.git
+git clone https://github.com/note-ai-inc/ink-ai-hack-playground.git
 cd ink-ai-hack-playground
 cp .env.example .env.local
 # set your key in .env.local:
