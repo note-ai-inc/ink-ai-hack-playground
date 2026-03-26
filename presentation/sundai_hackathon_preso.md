@@ -320,7 +320,7 @@ Each stroke = ordered array of these.
 
 ## Why polylines matter
 
-<div style="font-size: 1.4em;">
+<div style="font-size: 1.15em;">
 
 - **ML training data**
   - Sequence + timing + pressure = richer signal than pixels
