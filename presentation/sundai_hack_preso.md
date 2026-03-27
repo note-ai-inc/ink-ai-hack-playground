@@ -672,7 +672,7 @@ Build on HW reco + grid/cell mechanics.
 </div>
 <div class="right">
 
-<img src="assets/color-connect.webp">
+<img src="assets/color-connect.gif">
 
 </div>
 </div>
