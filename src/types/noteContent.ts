@@ -2,8 +2,17 @@
 
 import type { Element } from './elements';
 
+/** Per-element physics properties stored alongside the note. */
+export interface StoredPhysicsProperties {
+  mass?: number;
+  pinned?: boolean;
+  collidable?: boolean;
+}
+
 export interface NoteElements {
   elements: Element[];
+  /** Physics properties keyed by element ID. Only non-default values are stored. */
+  physicsProperties?: Record<string, StoredPhysicsProperties>;
   version?: number;
   metadata?: NoteMetadata;
 }

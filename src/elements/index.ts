@@ -4,6 +4,7 @@
 // all plugins are available for rendering, creation, and interaction.
 
 // Import all plugins to register them
+import './arrow';
 import './bridges';
 import './colorconnect';
 import './coordinateplane';

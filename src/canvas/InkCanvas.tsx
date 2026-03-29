@@ -26,6 +26,8 @@ import { DisambiguationMenu } from '../disambiguation';
 import type { DisambiguationIntent, DisambiguationAction, DisambiguationCandidate } from '../disambiguation';
 import { PaletteMenu } from '../palette';
 import type { PaletteIntent, PaletteAction } from '../palette';
+import { SpellMenu } from '../spell';
+import type { SpellIntent, SpellAction, SpellMenuPhysicsState } from '../spell';
 
 export type Tool = 'pen' | 'eraser' | 'pan' | 'select';
 
@@ -64,6 +66,14 @@ export interface InkCanvasProps {
   onPaletteAction?: (action: PaletteAction, entryId?: string) => void;
   // Overlay stroke clearing - used for scribble erase to sync stroke removal with element removal
   strokesToClearFromOverlay?: { strokes: Stroke[]; requestId: number } | null;
+  // Spell props (double-click element replacement)
+  spellIntent?: SpellIntent | null;
+  onSpellAction?: (action: SpellAction, value?: string) => void;
+  spellPhysicsState?: SpellMenuPhysicsState;
+  onSpellSetMass?: (mass: number) => void;
+  onSpellTogglePinned?: () => void;
+  onSpellToggleCollidable?: () => void;
+  onElementDoubleClick?: (element: Element) => void;
 }
 
 export function InkCanvas({
@@ -90,6 +100,13 @@ export function InkCanvas({
   paletteIntent,
   onPaletteAction,
   strokesToClearFromOverlay,
+  spellIntent,
+  onSpellAction,
+  spellPhysicsState,
+  onSpellSetMass,
+  onSpellTogglePinned,
+  onSpellToggleCollidable,
+  onElementDoubleClick,
 }: InkCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -1212,17 +1229,28 @@ export function InkCanvas({
     }
   }, [isPanning, isHandleDragging, activeHandle, isDragging, isDrawing, isErasing, isSelectingMarquee, onStrokeComplete, renderOverlay, noteElements.elements, onElementsChange, getElementsInRect, getAllElementsAtPoint, selectedElementIds, onSelectionChange, viewport]);
 
-  // Handle double-click to fit content (only in select/pan modes to avoid
-  // accidental zoom during gameplay or rapid inking)
-  const handleDoubleClick = useCallback(() => {
+  // Handle double-click: on element → open palette to replace; on empty space → fit content
+  const handleDoubleClick = useCallback((e: React.MouseEvent) => {
     if (currentTool !== 'select' && currentTool !== 'pan') return;
+
+    const canvasPoint = screenToCanvas(viewport, {
+      x: e.nativeEvent.offsetX,
+      y: e.nativeEvent.offsetY,
+    });
+    const clickedElement = getElementAtPoint(canvasPoint.x, canvasPoint.y);
+
+    if (clickedElement && onElementDoubleClick) {
+      onElementDoubleClick(clickedElement);
+      return;
+    }
+
     const bounds = getAllContentBounds(noteElements.elements);
     if (bounds) {
       const newViewport = fitToContent(viewport, bounds, canvasSize.width, canvasSize.height);
       setViewport(newViewport);
       onViewportChange?.(newViewport);
     }
-  }, [currentTool, noteElements.elements, viewport, canvasSize.width, canvasSize.height, onViewportChange]);
+  }, [currentTool, viewport, getElementAtPoint, onElementDoubleClick, noteElements.elements, canvasSize.width, canvasSize.height, onViewportChange]);
 
   // Prevent context menu on right-click (we use it for panning)
   const handleContextMenu = useCallback((e: React.MouseEvent) => {
@@ -1376,6 +1404,16 @@ export function InkCanvas({
         intent={paletteIntent ?? null}
         onAction={onPaletteAction ?? (() => {})}
         canvasToScreen={canvasToScreenWrapper}
+      />
+      {/* Spell menu (double-click element replacement) */}
+      <SpellMenu
+        intent={spellIntent ?? null}
+        onAction={onSpellAction ?? (() => {})}
+        canvasToScreen={canvasToScreenWrapper}
+        physicsState={spellPhysicsState}
+        onSetMass={onSpellSetMass}
+        onTogglePinned={onSpellTogglePinned}
+        onToggleCollidable={onSpellToggleCollidable}
       />
       {/* InkText content overlays in debug mode */}
       {showDebugOverlay && inkTextOverlays.map((overlay) => (

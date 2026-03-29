@@ -34,7 +34,12 @@ import type { StylePresetKey } from './services/stylePresets';
 import { detectRectangleX, lastRectXRejection, type RectangleXResult } from './geometry/rectangleXDetection';
 import { createPaletteIntent } from './palette';
 import type { PaletteIntent, PaletteAction } from './palette';
+import { createSpellIntent } from './spell';
+import type { SpellIntent, SpellAction } from './spell';
+import { getElementBounds } from './elements/rendering/ElementRenderer';
 import { Toaster } from './toast/Toast';
+import { useTransformEngine, translateElement } from './transform';
+import type { Vector2 } from './transform';
 import './App.css';
 
 
@@ -104,6 +109,35 @@ function App() {
   const currentNoteRef = useRef(currentNote);
   currentNoteRef.current = currentNote;
 
+  // Physics-based transform engine for continuous element movement
+  const { addVelocity, setMass, setPinned, isPinned, setCollidable, isCollidable, getPhysicsProperties, loadProperties, serializeProperties, rewind: rewindPhysics } = useTransformEngine({
+    onBatchTranslate: useCallback((displacements: Map<string, Vector2>) => {
+      const note = currentNoteRef.current;
+      setCurrentNote({
+        ...note,
+        elements: note.elements.map(el => {
+          const d = displacements.get(el.id);
+          return d ? translateElement(el, d) : el;
+        }),
+      });
+    }, [setCurrentNote]),
+    getBounds: useCallback((elementId: string) => {
+      const el = currentNoteRef.current.elements.find(e => e.id === elementId);
+      return el ? getElementBounds(el) : null;
+    }, []),
+    getElement: useCallback((elementId: string) => {
+      return currentNoteRef.current.elements.find(e => e.id === elementId) ?? null;
+    }, []),
+  });
+
+  // Load saved physics properties on mount
+  useEffect(() => {
+    const saved = currentNoteRef.current.physicsProperties;
+    if (saved) {
+      loadProperties(saved);
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Track pending strokes for element creation (strokes not yet assigned to elements)
   const pendingStrokesRef = useRef<Stroke[]>([]);
 
@@ -125,6 +159,9 @@ function App() {
 
   // Track palette intent (pending palette menu from rectangle+X gesture)
   const [paletteIntent, setPaletteIntent] = useState<PaletteIntent | null>(null);
+
+  // Track spell intent (pending spell menu from double-clicking an element)
+  const [spellIntent, setSpellIntent] = useState<SpellIntent | null>(null);
 
   // Track strokes to clear from overlay (for synchronized scribble erase)
   const [strokesToClearFromOverlay, setStrokesToClearFromOverlay] = useState<{ strokes: Stroke[]; requestId: number } | null>(null);
@@ -153,7 +190,11 @@ function App() {
   // Handle selection change from InkCanvas
   const handleSelectionChange = useCallback((newSelection: Set<string>) => {
     setSelectedElementIds(newSelection);
-  }, []);
+    // Dismiss spell menu if the target element is no longer selected
+    if (spellIntent && !newSelection.has(spellIntent.replacingElementId)) {
+      setSpellIntent(null);
+    }
+  }, [spellIntent]);
 
   // Handle moving selected elements
   const handleElementsMove = useCallback((elementIds: Set<string>, dx: number, dy: number) => {
@@ -354,7 +395,11 @@ function App() {
     }
     autoSaveTimeoutRef.current = setTimeout(() => {
       try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(currentNote));
+        const noteToSave = {
+          ...currentNote,
+          physicsProperties: serializeProperties(),
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(noteToSave));
         if (viewportRef.current) {
           localStorage.setItem(VIEWPORT_STORAGE_KEY, JSON.stringify(viewportRef.current));
         }
@@ -365,7 +410,7 @@ function App() {
     return () => {
       if (autoSaveTimeoutRef.current) clearTimeout(autoSaveTimeoutRef.current);
     };
-  }, [currentNote]);
+  }, [currentNote, serializeProperties]);
 
   // Handle new note
   const handleNewNote = useCallback(() => {
@@ -950,6 +995,93 @@ function App() {
     setDisambiguationIntent(null);
   }, [disambiguationIntent, currentNote, setCurrentNote, startElementAnimation]);
 
+  // Handle double-click on an element: open spell menu to replace it
+  const handleElementDoubleClick = useCallback((element: Element) => {
+    const bounds = getElementBounds(element);
+    if (!bounds) return;
+    setSpellIntent(createSpellIntent(bounds, element.id));
+  }, []);
+
+  // Handle spell action (user selected an entry, cast a spell, or dismissed)
+  const handleSpellAction = useCallback(async (
+    action: SpellAction,
+    value?: string
+  ) => {
+    if (!spellIntent) return;
+
+    if (action === 'select' && value) {
+      const entry = spellIntent.entries.find(e => e.id === value);
+      if (!entry) {
+        setSpellIntent(null);
+        return;
+      }
+
+      debugLog.info('Spell: selected entry', { entryId: value, label: entry.label });
+
+      // Velocity entries (e.g. movement) — add velocity directly, bypassing mass
+      if (entry.velocity) {
+        addVelocity(spellIntent.replacingElementId, entry.velocity);
+        return; // Don't dismiss spell menu
+      }
+
+      const consumeStrokes = () => { /* no-op for spell replacement */ };
+
+      const newElement = await entry.onSelect(
+        spellIntent.rectangleBounds,
+        consumeStrokes,
+        { elements: currentNoteRef.current.elements, gestureStrokes: [] },
+      );
+
+      const latestNote = currentNoteRef.current;
+      const replacingId = spellIntent.replacingElementId;
+      const remainingElements = latestNote.elements.filter(el => el.id !== replacingId);
+
+      if (newElement) {
+        logElementCreated(newElement.type, newElement.id, `spell replace: ${entry.label}`);
+        startElementAnimation([newElement.id]);
+        setCurrentNote({
+          ...latestNote,
+          elements: [...remainingElements, newElement],
+        });
+      }
+    } else if (action === 'cast' && value) {
+      debugLog.info('Spell: cast', { text: value, elementId: spellIntent.replacingElementId });
+
+      // TODO: process the spell text to transform the element
+    } else {
+      debugLog.info('Spell: dismissed');
+    }
+
+    setSpellIntent(null);
+  }, [spellIntent, setCurrentNote, startElementAnimation, addVelocity]);
+
+  // Physics state for the spell menu target element
+  const spellPhysicsState = useMemo(() => {
+    if (!spellIntent) return undefined;
+    const props = getPhysicsProperties(spellIntent.replacingElementId);
+    return { mass: props.mass, pinned: props.pinned, collidable: props.collidable };
+  }, [spellIntent, getPhysicsProperties]);
+
+  const handleSpellSetMass = useCallback((mass: number) => {
+    if (!spellIntent) return;
+    setMass(spellIntent.replacingElementId, mass);
+    debugLog.info('Spell: set mass', { elementId: spellIntent.replacingElementId, mass });
+  }, [spellIntent, setMass]);
+
+  const handleSpellTogglePinned = useCallback(() => {
+    if (!spellIntent) return;
+    const current = isPinned(spellIntent.replacingElementId);
+    setPinned(spellIntent.replacingElementId, !current);
+    debugLog.info('Spell: toggle pinned', { elementId: spellIntent.replacingElementId, pinned: !current });
+  }, [spellIntent, isPinned, setPinned]);
+
+  const handleSpellToggleCollidable = useCallback(() => {
+    if (!spellIntent) return;
+    const current = isCollidable(spellIntent.replacingElementId);
+    setCollidable(spellIntent.replacingElementId, !current);
+    debugLog.info('Spell: toggle collidable', { elementId: spellIntent.replacingElementId, collidable: !current });
+  }, [spellIntent, isCollidable, setCollidable]);
+
   // Handle palette action (user selected an entry or dismissed)
   // Uses currentNoteRef to avoid stale closure when onSelect awaits (e.g. file picker)
   const handlePaletteAction = useCallback(async (
@@ -1043,6 +1175,13 @@ function App() {
           paletteIntent={paletteIntent}
           onPaletteAction={handlePaletteAction}
           strokesToClearFromOverlay={strokesToClearFromOverlay}
+          spellIntent={spellIntent}
+          onSpellAction={handleSpellAction}
+          spellPhysicsState={spellPhysicsState}
+          onSpellSetMass={handleSpellSetMass}
+          onSpellTogglePinned={handleSpellTogglePinned}
+          onSpellToggleCollidable={handleSpellToggleCollidable}
+          onElementDoubleClick={handleElementDoubleClick}
         />
       </div>
 
@@ -1164,6 +1303,19 @@ function App() {
               <path d="M20.97 5c0 2.1-1.6 3.8-3.5 4"/>
               <path d="M22 13h-4"/>
               <path d="M17.2 17c2.1.1 3.8 1.9 3.8 4"/>
+            </svg>
+          </button>
+          <button
+            onClick={rewindPhysics}
+            title="Rewind — reset all elements to original positions"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              {/* Clock face */}
+              <circle cx="12" cy="13" r="8"/>
+              <path d="M12 9v4l2 2"/>
+              {/* Return arrow */}
+              <path d="M4 5v4h4"/>
+              <path d="M4 9a9 9 0 0 1 8-4"/>
             </svg>
           </button>
         </div>
